@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from parser.c99 import parser
+from .parser.c99 import parser
 
 
 class CCode(object):

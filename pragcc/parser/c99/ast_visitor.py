@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from parser.c99.pycparser import pycparser
+from . import pycparser
 
 
 class FuncDefVisitor(pycparser.c_ast.NodeVisitor):

@@ -1,18 +1,57 @@
 # -*- encoding: utf-8 -*-
+"""Parser Module.
+This module is an interface to the functionalities of pycpasrer,
+a Python implementation of a parser for C99 source code. The 
+pycparser implementation used here is a forked version from 
+the original one.
+
+.. _Google Python Style Guide:
+   https://github.com/DonAurelio/pycparser
+"""
 
 import os
 import pprint
-from parser.c99 import ast_visitor
-from parser.c99 import pycparser
+from . import ast_visitor
+from . import pycparser
 
 
 FAKE_DEFINES = '#include <_fake_defines.h>'
+"""str: Definitions headers.
+In a given C source code there are words that have a special meaning
+for the user and the compiler, for example *NULL*, *false*, *true*. 
+Therefore the compiler needs to know that these words have a special
+meanning and are not simply text. The *#include <_fake_defines.h>* header
+defines those imporant definitions.
+
+Example:
+    #define NULL 0
+    #define false 0
+    #define true 1
+"""
+
 FAKE_TYPEDEFS = '#include <_fake_typedefs.h>'
+"""str: Type definitions header.
+To parse a given C source code, the compiler needs to know 
+what is the type of each declared variable.
+"""
+
 FAKE_INCLUDES = [FAKE_DEFINES,FAKE_TYPEDEFS]
+"""List[str]: .
+The docstring may span multiple lines. The type may optionally be specified
+on the first line, separated by a colon.
+"""
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-FAKE_INCLUDES_DIR = os.path.join(BASE_DIR,'utils','fake_libc_include')
+"""int: Module level variable documented inline.
+The docstring may span multiple lines. The type may optionally be specified
+on the first line, separated by a colon.
+"""
 
+FAKE_INCLUDES_DIR = os.path.join(BASE_DIR,'utils','fake_libc_include')
+"""int: Module level variable documented inline.
+The docstring may span multiple lines. The type may optionally be specified
+on the first line, separated by a colon.
+"""
 
 def fake_cfile(file_path):
     dir_path = os.path.dirname(file_path)
