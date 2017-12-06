@@ -2,9 +2,8 @@
 
 import os
 import yaml
-import settings
 import shutil
-
+from . import settings
 
 class ParallelFile(object):
 

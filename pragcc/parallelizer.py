@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
-import code
-import metadata
+from . import code
+from . import metadata
 
 
 class BaseParallelizer(object):
@@ -200,7 +200,7 @@ class OpenACC(BaseParallelizer):
 
         #  Available directives
 
-        # Data directive insetions (This must by inserted first)
+        # Data directive insertions (This must by inserted first)
         insertions += self.get_data_pragma(function_name,directives)
         
         # Loops pragmas directives insertions
