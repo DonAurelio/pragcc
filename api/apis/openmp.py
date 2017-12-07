@@ -19,7 +19,7 @@ Code = api.model('Code',{
 })
 
 
-@api.route('/')
+@api.route('/parallelize')
 class PragccOpenMP(Resource):
     """Deals with the parallelization of C99 Source code with OpenMP directives."""
 
@@ -28,10 +28,11 @@ class PragccOpenMP(Resource):
         """Returns C99 source code annotated with OpenMP compiler directives."""
 
         data = request.json
+        rendered_template = ''
         manager = OpenMPManager()
         parallel_metadata = data['parallel_metadata']
         c_source_code = data['c_source_code']
         rendered_template = manager.get_annotated_code(
             parallel_metadata,c_source_code)
 
-        return rendered_template
+        return data

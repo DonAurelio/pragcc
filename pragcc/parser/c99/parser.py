@@ -54,6 +54,21 @@ on the first line, separated by a colon.
 """
 
 def fake_cfile(file_path):
+    """Include fake include header with the basic C99 type definitions.
+    To parce a C99 source code it is not neccesary to get the whole
+    Libaries included. Then, to parse the code, we remove those headers
+    an include fake headers with the neccesarry dafinitions to allow the 
+    parser to parse de code.
+
+    Args:
+        file_path (str): Path to the C99 source code file which 
+            include heraders needs to be faked.
+
+    Returns:
+        A path the facked file, it is to say a file with the suffix
+            fake_<filename>.c.
+
+    """
     dir_path = os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
     new_file_name = 'fake_' + file_name
@@ -82,6 +97,16 @@ def fake_cfile(file_path):
     return faked_file_path
 
 def parse_cfile(file_path,compiler='gcc'):
+    """Parse a C99 source code into a Syntrax Abstract Tree.
+    
+    Args:
+        file_path (str): Path to the file to be parsed.
+        compiler (str): The compiler used to preprocess the 
+            file to be parsed.
+
+    Returns:
+        A Syntrax Abstract Tree.
+    """
     faked_file_path = fake_cfile(file_path=file_path)
 
     ast = pycparser.pycparser.parse_file(filename=faked_file_path,use_cpp=True,
@@ -91,10 +116,34 @@ def parse_cfile(file_path,compiler='gcc'):
 
 
 def get_data_from_cfile(file_path,compiler='gcc'):
-    """Parse a C99 source code file.
+    """Divide a C99 source code in sections.
 
-    Teneindo en cuenta la informacion del AST y el codigo crudo, me permite 
-    obtener retona datos importante de codigo para su paralelizacion.
+    Use pycparser to parse a C99 source code and dive it into three sections.
+    **include**, **declaration**, **functions**. 
+
+    Example:
+
+        {
+            'file_path': '/home/somebody/project/code.c',
+            'include': '#include <stdlib.h>\n#include <sdtio.h>',      
+            'declaration': '#define PI 3.141516',
+            'functions': [
+                { 
+                    name: 'initilize', 
+                    begin: 12, 
+                    end: 15: 
+                    raw:'void initialize(int i){\n //somebody\n}' 
+                },
+                ...
+            ]
+        }
+        
+
+        file_path, it is the path to the parsed file. Include, raw inclides 
+        sections in the file. Declarations, raw declarations in the file.
+        Functions, a list of dict, which contains information about each 
+        function, the line on which it begin and end in the code, finally 
+        the raw code. 
 
     Note:
         This function support files that can be parsed by pycparser,
@@ -104,6 +153,9 @@ def get_data_from_cfile(file_path,compiler='gcc'):
         file_path (str): The path to the C99 source file to be parsed.
         compiler (str): The compiler to preprocess the c99 source code file.
 
+
+    Returns:
+        dict: a dict containing the sections of the C99 source code.
     """
 
     code_ast = parse_cfile(file_path)

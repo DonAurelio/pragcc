@@ -1,41 +1,34 @@
 # -*- encoding: utf-8 -*-
+"""On this module are defined the interfaces to explore a pycparser AST."""
 
 from . import pycparser
 
 
 class FuncDefVisitor(pycparser.c_ast.NodeVisitor):
-    """
-        Returns:
-            A dict corresponing with sections (includes, declarations, function
-            definitions) of C99 source file located in ``file_path``. For 
-            example:
-
-            {
-                'file_path': '/home/somebody/project/code.c',
-                'include': '#include <stdlib.h>\n#include <sdtio.h>',      
-                'declaration': '#define PI 3.141516',
-                'functions': [
-                    { 
-                        name: 'initilize', 
-                        begin: 12, 
-                        end: 15: 
-                        raw:'void initialize(int i){\n //somebody\n}' 
-                    },
-                    ...
-                ]
-            }
-            
-
-            file_path, it is the path to the parsed file. Include, raw inclides 
-            sections in the file. Declarations, raw declarations in the file.
-            Functions, a list of dict, which contains information about each 
-            function, the line on which it begin and end in the code, finally 
-            the raw code. 
-            }
-    """
+    """Interface to function definitions in Syntax Abtract Tree."""
 
     @staticmethod
     def funcdef_data(funcdef):
+        """Extract data from a function definition object.
+
+        It also extract information from the function object like 
+        the begin and end line on the code. It also exract information
+        of its loops if they are present.
+
+        Args:
+            fundef (pycparser.c_ast.FuncDef): A piece of the Syntrax Abstract
+                Tree which contains the relevant information of a function 
+                definition in a given C99 source code.
+
+        Returns:
+            dict: 
+            {
+                name: 'function name'
+                begin: 'function begin line'
+                end:    ''function end line
+                for_loops:  'function loops data'
+            } 
+        """
         data = {}
         data['name'] = funcdef.decl.name
         data['begin'] = funcdef.decl.coord.line
@@ -50,6 +43,16 @@ class FuncDefVisitor(pycparser.c_ast.NodeVisitor):
 
     @staticmethod
     def funcdefs_data(funcdefs):
+        """Extract data from a list of function definition objects.
+
+        Args:
+            funcdefs (List[pycparser.c_ast.FuncDef]): A list of 
+                pycparser.c_ast.FuncDef objects.
+
+        Returns
+            List[dict]: A list containing the dada of each function
+                in the C99 source code.
+        """
         funcdefs_data = []
         for funcdef in funcdefs:
             funcdefs_data.append(FuncDefVisitor.funcdef_data(funcdef))
@@ -60,9 +63,30 @@ class FuncDefVisitor(pycparser.c_ast.NodeVisitor):
         self._funcdefs = []
 
     def visit_FuncDef(self,node):
+        """Append in a list all function definitions founded in the AST.
+
+        Args:
+            node (pycparser.c_ast.FuncDef): A function definition object.
+        """
         self._funcdefs.append(node)
 
     def funcdefs(self,node):
+        """Returns a list of pycparser.c_ast.FuncDef objects.
+        Visit all function defnitions reachable from the given
+        node.
+
+        Note:
+            All nodes in the AST inherit from pycparser.c_ast.Node.
+
+        Args: 
+            node (pycparser.c_ast.Node): A node from which we want 
+                to find function definitions.
+
+        Returns:
+            List[pycparser.c_ast.FuncDef]: A List of pycparser.c_ast.FuncDef
+                objects.
+
+        """
         self.visit(node)
         funcdefs = self._funcdefs[:]
         del self._funcdefs[:]
@@ -74,6 +98,7 @@ class ForVisitor(pycparser.c_ast.NodeVisitor):
 
     @staticmethod
     def _for_loops(node,loop_depth=0):
+        """Returns a list of pycparser.c_ast.For objects founded in the AST ."""
         loops = []
         new_loop_depth = loop_depth
         if isinstance(node,pycparser.c_ast.For):
