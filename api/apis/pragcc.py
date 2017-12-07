@@ -3,7 +3,7 @@ from flask_restplus import Namespace, Resource, fields
 from pragcc.manager import OpenMPManager
 
 # Defining the name space for Catt cafile
-api = Namespace('openmp',description='An interface to the openmp code annotation directives.')
+api = Namespace('pragcc',description='An interface to the openmp code annotation directives.')
 
 # Defining cafile json model
 Code = api.model('Code',{
@@ -11,7 +11,7 @@ Code = api.model('Code',{
         required=True,
         description='A description about how the C source should be parallelized or annotated.' 
     ),
-    'c_source_code': fields.String(
+    'c_raw_code': fields.String(
         required=True,
         description='The C source code to be parallelized or annotated with compiler directives.'
     )
@@ -19,7 +19,7 @@ Code = api.model('Code',{
 })
 
 
-@api.route('/parallelize')
+@api.route('/openmp')
 class PragccOpenMP(Resource):
     """Deals with the parallelization of C99 Source code with OpenMP directives."""
 
@@ -31,8 +31,13 @@ class PragccOpenMP(Resource):
         rendered_template = ''
         manager = OpenMPManager()
         parallel_metadata = data['parallel_metadata']
-        c_source_code = data['c_source_code']
-        rendered_template = manager.get_annotated_code(
-            parallel_metadata,c_source_code)
+        c_raw_code = data['c_raw_code']
+        annotated_raw_code = manager.get_annotated_code(
+            parallel_metadata,c_raw_code)
+
+        data = {
+            'message':'Compilation successfull !',
+            'annotated_code': annotated_raw_code
+        }
 
         return data
