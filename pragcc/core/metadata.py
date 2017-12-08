@@ -36,7 +36,7 @@ class ParallelFile(object):
 
     @staticmethod
     def _load_from_text(text):
-        data = yaml.dump(yaml.load(text))
+        data = yaml.load(text)
         return data
 
     @staticmethod

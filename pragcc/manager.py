@@ -1,33 +1,22 @@
 # -*- encoding: utf-8 -*-
 
 import tempfile
-from . import metadata
-from . import parallelizer
+from .core import metadata
+from .core import parallelizer
 
 
 class OpenMPManager(object):
 
-    def __init__(self):
-        pass
-
-    def get_annotated_code(self,raw_parallel_file,c_raw_code):
+    def get_annotated_raw_code(self,raw_parallel_file,raw_c_code):
 
         parallel_meta = metadata.ParallelFile(raw_text=raw_parallel_file)
-        with tempfile.NamedTemporaryFile(mode='w+t') as file:
-            file.write(c_raw_code)
-            ccode = parallelizer.OpenMP(
-                file_path=file.name,
-                parallel_metadata=parallel_meta
-            ) 
+        openmp_parallelizer = parallelizer.OpenMP(
+        	metadata=parallel_meta,
+        	raw_code=raw_c_code
+        )
+        ccode = openmp_parallelizer.parallelize()
 
-
-        # file , file_path = tempfile.mkstemp(suffix=None, prefix=None, dir=None, text='w')
-        # print("FILE PATH:",file_path)
-        # file.close()
-
-        # openmp = parallel.OpenMP(file_path,parallel_metadata)
-
-        return parallel_meta.data
+        return ccode.raw
 
 
 class OpenACCManager(object):

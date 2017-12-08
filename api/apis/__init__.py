@@ -1,7 +1,6 @@
 from flask_restplus import Api
 
 from .pragcc import api as pragcc_namespace
-# from .openacc import api as openacc_namespace
 
 
 api = Api(
@@ -12,4 +11,3 @@ api = Api(
 )
 
 api.add_namespace(pragcc_namespace)
-# api.add_namespace(openacc_namespace)

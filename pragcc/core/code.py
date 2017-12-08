@@ -50,9 +50,10 @@ class CCode(object):
             # When this happend we need to raise and exception
             # The data dict can't be None
             raise ValueError(
-                'file_path or raw_code kwargs must be setting'
+                """file_path or raw_code kwargs any of these 
+                parameters must be configured"""
             )
-
+            
     @property
     def raw(self):
         raw_code = ''
@@ -122,8 +123,11 @@ class CCode(object):
         function = next(filter(condition,self._data['functions']),None)
         function['raw'] = new_raw
 
-        if commit:
-            self.update_associated_file()
+        # This functionality needs to be tested, when we read the code 
+        # from a file its works, but when we read the code form text
+        # the file do not exist, so this function will raise an error.
+        # if commit:
+        #     self.update_associated_file()
 
         return new_raw
 
@@ -139,6 +143,7 @@ class CCode(object):
             self._data = CCode.load_data_from_text(self._raw_code)
         else:
             raise ValueError(
-                'file_path or raw_code kwargs must be setting'
+                """file_path or raw_code kwargs any of these 
+                parameters must be configured"""
             )
 

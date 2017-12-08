@@ -136,4 +136,4 @@ if __name__ == '__main__':
     # test_code_object_from_file()
     # test_code_object_from_text()
     # test_parallel_metadata()
-    # test_code_parallelizer()
+    test_code_parallelizer()
