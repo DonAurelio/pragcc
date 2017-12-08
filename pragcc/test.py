@@ -107,25 +107,26 @@ void evolve(bool * in, bool * out)
 
 
 def test_parallel_metadata():
-    import metadata
-    parallelfile = metadata.ParallelFile.create_file(dir_path=TEST_DIR)
-    print('File path:',parallelfile.file_path)
+    from . import metadata
+
+    file_path = os.path.join(TEST_DIR,'parallel.yml')
+    parallelfile = metadata.ParallelFile(file_path=file_path)
     print('Data:')
     pprint.pprint(parallelfile.data)
     return parallelfile
 
 def test_code_parallelizer():
-    import parallelizer
+    from . import parallelizer
 
     file_path = os.path.join(TEST_DIR,'stencil.c')
     parallelfile = test_parallel_metadata()
 
-    omp = parallelizer.OpenMP(file_path,parallelfile)
+    omp = parallelizer.OpenMP(file_path=file_path,metadata=parallelfile)
     pccode = omp.parallelize()
     print('OPENMP Parallelized Code')
     print(pccode.raw)
 
-    acc = parallelizer.OpenACC(file_path,parallelfile)
+    acc = parallelizer.OpenACC(file_path=file_path,metadata=parallelfile)
     acc_code = acc.parallelize()
     print('OPENACC Parallelized Code')
     print(acc_code.raw)
@@ -133,6 +134,6 @@ def test_code_parallelizer():
 if __name__ == '__main__':
     # test_code_parsing()
     # test_code_object_from_file()
-    test_code_object_from_text()
+    # test_code_object_from_text()
     # test_parallel_metadata()
     # test_code_parallelizer()

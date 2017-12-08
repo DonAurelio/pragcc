@@ -247,7 +247,7 @@ class OpenACC(BaseParallelizer):
 
     def __init__(self,metadata=None,file_path=None,raw_code=None):
         """Creates an code annotated with OpenMP Directives."""
-        super(OpenMP,self).__init__(
+        super(OpenACC,self).__init__(
             metadata=metadata,
             file_suffix='acc_',
             file_path=file_path,

@@ -13,6 +13,27 @@ class ParallelFile(object):
     BLOCK_DIRECTIVES = ['parallel','kernels','data']
     LINE_DIRECTIVES = ['for','loop']
 
+    # This function looks for give and example of a paralell file format.
+    # in a given directory.
+    # @staticmethod
+    # def create_file(dir_path):
+    #     """Creates a parallel.yml file.
+    #     Creates the indicated parallel.yml file given the directory where it 
+    #     should be created.
+    #     Args:
+    #         dir_path (str): An unique location to the dir on which a 
+    #             parallel.yml will be created.
+    #     Returns:
+    #         A ParallelFile instance which contains the parallel.yml data.
+    #     """
+
+    #     file_path = os.path.join(dir_path,settings.PARALLEL_FILE_NAME)
+    #     base_file_path = os.path.join(settings.PARALLEL_FILE_DIR,
+    #         settings.PARALLEL_FILE_NAME)
+    #     shutil.copyfile(src=base_file_path,dst=file_path)
+
+    #     return ParallelFile(dir_path) if base_file_path else None
+
     @staticmethod
     def _load_from_text(text):
         data = yaml.dump(yaml.load(text))

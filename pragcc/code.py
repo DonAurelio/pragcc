@@ -6,10 +6,6 @@ import tempfile
 from .parser.c99 import parser
 
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DIR = os.path.join(BASE_DIR,'tests')
-TEST_FILE_NAME = os.path.join(TEST_DIR,'hello.c')
-
 class CCode(object):
 
     @staticmethod
@@ -41,6 +37,10 @@ class CCode(object):
 
 
     def __init__(self,file_suffix='ccode_',file_path=None,raw_code=None):
+
+        self._file_path = file_path
+        self._raw_code = raw_code
+
         if file_path:
             copied_file_path = CCode.copy_file(file_path,file_suffix)
             self._data = CCode.load_data_from_file(copied_file_path)
@@ -49,7 +49,9 @@ class CCode(object):
         else:
             # When this happend we need to raise and exception
             # The data dict can't be None
-            self._data = None
+            raise ValueError(
+                'file_path or raw_code kwargs must be setting'
+            )
 
     @property
     def raw(self):
@@ -120,11 +122,8 @@ class CCode(object):
         function = next(filter(condition,self._data['functions']),None)
         function['raw'] = new_raw
 
-        # This functionality needs to be tested when we read the code 
-        # from a file its works, but when we read the code form text
-        # the file do not exist, so this function will raise an error.
-        # if commit:
-        #     self.update_associated_file()
+        if commit:
+            self.update_associated_file()
 
         return new_raw
 
@@ -134,4 +133,12 @@ class CCode(object):
         with open(file_path,'w') as file:
             file.write(new_raw_data)
         
-        self._data = CCode.load_data(file_path)
+        if self._file_path:
+            self._data = CCode.load_data_from_file(self._file_path)
+        elif self._raw_code:
+            self._data = CCode.load_data_from_text(self._raw_code)
+        else:
+            raise ValueError(
+                'file_path or raw_code kwargs must be setting'
+            )
+
