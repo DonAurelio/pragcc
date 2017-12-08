@@ -10,15 +10,17 @@ TEST_DIR = os.path.join(BASE_DIR,'tests')
 
 
 def test_code_parsing():
-    from parser.c99 import parser
+    """Test parser.c99.parser."""
+    from .parser.c99 import parser
     file_path = os.path.join(TEST_DIR,'stencil.c')
 
     code_data = parser.get_data_from_cfile(file_path=file_path)
     print('Code Data')
     pprint.pprint(code_data)
 
-def test_code_object():
-    import code
+def test_code_object_from_file():
+    """Test code.CCode. reading a c99 source code from a file."""
+    from . import code
 
     new_raw_code = """
 void evolve(bool * in, bool * out)
@@ -43,7 +45,7 @@ void evolve(bool * in, bool * out)
 
     file_path = os.path.join(TEST_DIR,'stencil.c')
 
-    ccode = code.CCode(file_path)
+    ccode = code.CCode(file_path=file_path)
     print('CCode Raw')
     print(ccode.raw)
 
@@ -77,6 +79,6 @@ def test_code_parallelizer():
 
 if __name__ == '__main__':
     # test_code_parsing()
-    # test_code_object()
+    test_code_object_from_file()
     # test_parallel_metadata()
-    test_code_parallelizer()
+    # test_code_parallelizer()

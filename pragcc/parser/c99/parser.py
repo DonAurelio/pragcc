@@ -109,7 +109,7 @@ def parse_cfile(file_path,compiler='gcc'):
     """
     faked_file_path = fake_cfile(file_path=file_path)
 
-    ast = pycparser.pycparser.parse_file(filename=faked_file_path,use_cpp=True,
+    ast = pycparser.parse_file(filename=faked_file_path,use_cpp=True,
         cpp_path=compiler, cpp_args=['-E', r'-I%s' % FAKE_INCLUDES_DIR])
 
     return ast

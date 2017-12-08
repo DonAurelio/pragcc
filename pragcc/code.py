@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import tempfile
 from .parser.c99 import parser
 
 
@@ -19,13 +20,29 @@ class CCode(object):
         return new_file_path
 
     @staticmethod
-    def load_data(file_path):
+    def load_data_from_file(file_path):
         code_data = parser.get_data_from_cfile(file_path)
         return code_data
 
-    def __init__(self,file_path,file_suffix='ccode_'):
+    @staticmethod
+    def load_data_from_text(text):
+        with tempfile.NamedTemporaryFile(mode='w+t') as file:
+            file.write(c_raw_code)
+            return CCode.load_data_from_file(file.name)
+
+
+
+    def __init__(self,file_suffix='ccode_',file_path=None,raw_code=None):
         copied_file_path = CCode.copy_file(file_path,file_suffix)
-        self._data = CCode.load_data(copied_file_path)
+
+        if file_path:
+            self._data = CCode.load_data_from_file(copied_file_path)
+        elif raw_code:
+            self._data = CCode.load_data_from_text(raw_code)
+        else:
+            # When this happend we need to raise and exception
+            # The data dict can't be None
+            self._data = None
 
     @property
     def raw(self):
@@ -96,8 +113,11 @@ class CCode(object):
         function = next(filter(condition,self._data['functions']),None)
         function['raw'] = new_raw
 
-        if commit:
-            self.update_associated_file()
+        # This functionality needs to be tested when we read the code 
+        # from a file its works, but when we read the code form text
+        # the file do not exist, so this function will raise an error.
+        # if commit:
+        #     self.update_associated_file()
 
         return new_raw
 
