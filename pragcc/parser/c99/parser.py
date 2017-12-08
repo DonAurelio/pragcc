@@ -164,9 +164,10 @@ def get_data_from_cfile(file_path,compiler='gcc'):
     fundefs_data = visitor.funcdefs_data(funcdefs)
     
     code_data = {}
+
     with open(file_path,'r') as file:
         code_lines = file.readlines()
-
+        print('CODE LINES',code_lines)
         includes_end_line = [ line + 1 for line, raw in enumerate(code_lines) \
          if '#include' in raw ][-1]
         fundef_init_line = fundefs_data[0]['begin'] - 1

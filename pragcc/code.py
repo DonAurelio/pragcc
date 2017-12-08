@@ -6,6 +6,10 @@ import tempfile
 from .parser.c99 import parser
 
 
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_DIR = os.path.join(BASE_DIR,'tests')
+TEST_FILE_NAME = os.path.join(TEST_DIR,'hello.c')
+
 class CCode(object):
 
     @staticmethod
@@ -26,16 +30,19 @@ class CCode(object):
 
     @staticmethod
     def load_data_from_text(text):
-        with tempfile.NamedTemporaryFile(mode='w+t') as file:
-            file.write(c_raw_code)
-            return CCode.load_data_from_file(file.name)
+        with tempfile.TemporaryDirectory() as dir_path:
+            file_path = os.path.join(dir_path,'temp.c')
 
+            with open(file_path,'w') as file:
+                file.write(text)
+                file.seek(0)
+
+            return CCode.load_data_from_file(file_path)
 
 
     def __init__(self,file_suffix='ccode_',file_path=None,raw_code=None):
-        copied_file_path = CCode.copy_file(file_path,file_suffix)
-
         if file_path:
+            copied_file_path = CCode.copy_file(file_path,file_suffix)
             self._data = CCode.load_data_from_file(copied_file_path)
         elif raw_code:
             self._data = CCode.load_data_from_text(raw_code)
