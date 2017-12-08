@@ -1,6 +1,6 @@
 # Pragmatic C99 Code (pragcc)
 
-This tool is a Source-to-Source Parallelizing Compiler (or transpiler) which relies on the [pycparser](https://github.com/eliben/pycparser) to annotate a C99 source code with OpenMP and OpenACC directives given a metadata file called **parallel.yml**.
+This tool is a  initiative for a [Source-to-Source Parallelizing Compiler (or transpiler)](https://en.wikipedia.org/wiki/Automatic_parallelization) written in **Python** which relies on the [pycparser](https://github.com/eliben/pycparser) to annotate a C99 source code with OpenMP and OpenACC directives given a metadata file called **Parallel File**.
 
 ## Example
 
@@ -27,7 +27,7 @@ void evolve(bool * in, bool * out)
 }
 ```
 
-So we create a **parallel.yml** file as shown below.
+So we create a **Parallel File** called **parallel.yml** as shown below.
 
 ```yaml
 name: 'Name to this parallel file'
@@ -95,13 +95,25 @@ void evolve(bool * in, bool * out)
 }
 ```
 
-**Note: The correct paralelization of the program depends of how the file is created.**
+**Note: The correct paralelization of the program depends of how the Parallel File is defined.**
 
-# Test Pragcc Module
+# Tests
+
+Before performing tests you need to clone [this repository](https://github.com/DonAurelio/pycparser) which is a forked version from the original pycpasrer, copy the content of the **pycparser** folder and place it into the **pragcc/core/parser/c99/pycparser** folder. 
+
+To test the **Pragcc Module**, install its requirements, and perform the tests as follows. Remember to perform the tests form 
+the root directory.
 
 ```bash
 pip3 install -r ./pragcc/requirements.txt
-python3 -m pragcc.test
+python3 tests/pragcc.py
+```
+
+To test the **Pragcc API-REST**, install the api module requirements and init the api server as follows:
+
+```bash
+pip3 install -r ./api/requirements.txt
+python3 api/app.py
 ```
 
 # Todo
@@ -109,6 +121,18 @@ python3 -m pragcc.test
 * Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.
 
 # References
+
+[Structured Parallel Programming: Patterns for Efficient Computation](https://www.amazon.com/Structured-Parallel-Programming-Efficient-Computation/dp/0124159931)
+
+[Designing a RESTful API using Flask-RESTful](https://blog.miguelgrinberg.com/post/designing-a-restful-api-using-flask-restful)
+
+[Flask-RESTful](http://flask-restful.readthedocs.io/en/latest/)
+
+[Designing a RESTful API with Python and Flask](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
+
+[AJAX with jQuery](http://flask.pocoo.org/docs/0.12/patterns/jquery/)
+
+[Flask Examples Github](https://github.com/pallets/flask/tree/master/examples/jqueryexample)
 
 [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html)
 
