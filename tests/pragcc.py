@@ -1,17 +1,22 @@
 # -*- encoding: utf-8 -*-
 
+import sys
+
+# To include the pragcc module in the python path
+sys.path[0:0] = ['.', '..']
+
 import os
 import shutil
 import pprint
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DIR = os.path.join(BASE_DIR,'tests')
+TEST_DIR = os.path.join(BASE_DIR,'files')
 
 
 def test_code_parsing():
     """Test parser.c99.parser."""
-    from .parser.c99 import parser
+    from pragcc.core.parser.c99 import parser
     file_path = os.path.join(TEST_DIR,'stencil.c')
 
     code_data = parser.get_data_from_cfile(file_path=file_path)
@@ -20,7 +25,7 @@ def test_code_parsing():
 
 def test_code_object_from_file():
     """Test code.CCode. reading a c99 source code from a file."""
-    from . import code
+    from pragcc.core import code
 
     new_raw_code = """
 void evolve(bool * in, bool * out)
@@ -60,7 +65,7 @@ void evolve(bool * in, bool * out)
 
 def test_code_object_from_text():
     """Test code.CCode. reading a c99 source code from a text."""
-    from . import code
+    from pragcc.core import code
 
     raw_code = """
 
@@ -107,7 +112,7 @@ void evolve(bool * in, bool * out)
 
 
 def test_parallel_metadata():
-    from . import metadata
+    from pragcc.core import metadata
 
     file_path = os.path.join(TEST_DIR,'parallel.yml')
     parallelfile = metadata.ParallelFile(file_path=file_path)
@@ -116,7 +121,7 @@ def test_parallel_metadata():
     return parallelfile
 
 def test_code_parallelizer():
-    from . import parallelizer
+    from pragcc.core import parallelizer
 
     file_path = os.path.join(TEST_DIR,'stencil.c')
     parallelfile = test_parallel_metadata()
@@ -132,8 +137,8 @@ def test_code_parallelizer():
     print(acc_code.raw)
 
 if __name__ == '__main__':
-    # test_code_parsing()
-    # test_code_object_from_file()
-    # test_code_object_from_text()
-    # test_parallel_metadata()
+    test_code_parsing()
+    test_code_object_from_file()
+    test_code_object_from_text()
+    test_parallel_metadata()
     test_code_parallelizer()

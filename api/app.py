@@ -1,5 +1,6 @@
 import sys
-# To allow the api to see the 'catt' module
+
+# To include the pragcc module in the python path
 sys.path.extend(['.', '..'])
 
 from flask import Flask
