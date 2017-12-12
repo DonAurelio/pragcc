@@ -116,6 +116,23 @@ pip3 install -r ./api/requirements.txt
 python3 api/app.py
 ```
 
+The application expose the following endpoints to interact with.
+
+| HTTP Method | URI | Action |
+|---|---|---|
+| POST | http://[hostname]/pragcc/openmp | Returns a c99 source code annotated with OpenMP directives |
+
+
+# Deployment with Docker
+
+Perform the following commands to build the **catt** image, then to run the **catt** API in a container. These command need to be 
+performed form the catt project root directory.
+
+```sh
+docker build -t pragcc .
+docker run -d -v ${PWD}:/usr/src/app --name pragcc -p 5001:5001 pragcc
+```
+
 # Todo
 
 * Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.

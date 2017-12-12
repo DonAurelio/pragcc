@@ -96,13 +96,12 @@ def fake_cfile(file_path):
 
     return faked_file_path
 
-def parse_cfile(file_path,compiler='gcc'):
+def parse_cfile(file_path,preprocesor='cpp'):
     """Parse a C99 source code into a Syntrax Abstract Tree.
     
     Args:
         file_path (str): Path to the file to be parsed.
-        compiler (str): The compiler used to preprocess the 
-            file to be parsed.
+        preprocesor (str): C preprocessor.
 
     Returns:
         A Syntrax Abstract Tree.
@@ -110,7 +109,7 @@ def parse_cfile(file_path,compiler='gcc'):
     faked_file_path = fake_cfile(file_path=file_path)
 
     ast = pycparser.parse_file(filename=faked_file_path,use_cpp=True,
-        cpp_path=compiler, cpp_args=['-E', r'-I%s' % FAKE_INCLUDES_DIR])
+        cpp_path=preprocesor, cpp_args=['-E', r'-I%s' % FAKE_INCLUDES_DIR])
 
     return ast
 
