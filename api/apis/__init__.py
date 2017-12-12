@@ -1,6 +1,6 @@
 from flask_restplus import Api
 
-from .pragcc import api as pragcc_namespace
+from .openmp import api as openmp_namespace
 
 
 api = Api(
@@ -10,4 +10,4 @@ api = Api(
     OpenMP and OpenACC compiler directives."""
 )
 
-api.add_namespace(pragcc_namespace)
+api.add_namespace(openmp_namespace)
