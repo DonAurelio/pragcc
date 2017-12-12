@@ -7,7 +7,7 @@ from .core import parallelizer
 
 class OpenMPManager(object):
 
-    def get_annotated_raw_code(self,raw_parallel_file,raw_c_code):
+    def get_annotated_code_data(self,raw_parallel_file,raw_c_code):
 
         parallel_meta = metadata.ParallelFile(raw_text=raw_parallel_file)
         openmp_parallelizer = parallelizer.OpenMP(
@@ -16,7 +16,13 @@ class OpenMPManager(object):
         )
         ccode = openmp_parallelizer.parallelize()
 
-        return ccode.raw
+        data = {
+            'name': 'omp.c',
+            'ftype': ccode.file_type,
+            'text': ccode.raw
+        }
+
+        return data
 
 
 class OpenACCManager(object):

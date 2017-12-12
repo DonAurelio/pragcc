@@ -16,7 +16,7 @@ class CCode(object):
         new_file_name = file_suffix + file_name
         new_file_path = os.path.join(dir_path,new_file_name)
         shutil.copyfile(src=base_file_path,dst=new_file_path)
-        
+       
         return new_file_path
 
     @staticmethod
@@ -63,6 +63,10 @@ class CCode(object):
             raw_code += function['raw'] + '\n'
 
         return raw_code
+
+    @property
+    def file_type(self):
+        return 'c99'
 
     def get_function_raw(self,function_name):
         condition = lambda function: function['name'] in function_name

@@ -42,14 +42,14 @@ class OpenMP(Resource):
         raw_c_code = data['raw_c_code']
 
         manager = OpenMPManager()
-        annotated_raw_code = manager.get_annotated_raw_code(
+        code_data = manager.get_annotated_code_data(
             raw_parallel_file=raw_parallel_file,
             raw_c_code=raw_c_code
         )
 
         data = {
-            'message':'Compilation successfull !',
-            'annotated_code': annotated_raw_code
+            'message':'OpenMP parallelization successfull !',
+            'data': code_data
         }
 
         return data
