@@ -6,11 +6,11 @@ from . import data
 
 
 # Defining the name space for Catt cafile
-api = Namespace('compile',description='Annotate code with OpenMP compiler directives.')
+api = Namespace('compile',description='Check if a given c source code can be compiled.')
 
 
 # Defining raw code model
-Code = api.model('Code',{
+code = api.model('Code',{
     'raw_c_code': fields.String(
         required=True,
         description='The C source code to be compiled.',
@@ -29,23 +29,19 @@ class Gcc(Resource):
         data = {}
         return data
 
-    @api.expect(Code)
+    @api.expect(code)
     def post(self):
-        """Returns C99 source code annotated with OpenMP compiler directives."""
+        """Check if a C program compile correctly."""
 
         data = request.json
-        raw_parallel_file = data['raw_parallel_file']
         raw_c_code = data['raw_c_code']
 
         manager = GccManager()
-        stdout, stderror = manager.get_annotated_code_data(
-            raw_parallel_file=raw_parallel_file,
-            raw_c_code=raw_c_code
-        )
+        stdout, stderror = manager.compile_raw_code(raw_c_code)
 
-        data = {
-            'message':'OpenMP parallelization successfull !',
-            'data': code_data
-        }
+        if stderror:
+            response = ({'message': stderror}, 400)
+        else:
+            response = ({'message':'Compilation successfull !!'}, 200)
 
-        return data
+        return response

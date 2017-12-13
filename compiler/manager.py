@@ -1,5 +1,6 @@
 import tempfile
 import subprocess
+import os
 
 class GccManager(object):
 

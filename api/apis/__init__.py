@@ -1,6 +1,7 @@
 from flask_restplus import Api
 
 from .openmp import api as openmp_namespace
+from .compiler import api as compiler_namespace
 
 
 api = Api(
@@ -11,3 +12,4 @@ api = Api(
 )
 
 api.add_namespace(openmp_namespace)
+api.add_namespace(compiler_namespace)
