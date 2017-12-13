@@ -47,9 +47,4 @@ class OpenMP(Resource):
             raw_c_code=raw_c_code
         )
 
-        data = {
-            'message':'OpenMP parallelization successfull !',
-            'data': code_data
-        }
-
-        return data
+        return code_data

@@ -6,7 +6,7 @@ from . import data
 
 
 # Defining the name space for Catt cafile
-api = Namespace('compile',description='Check if a given c source code can be compiled.')
+api = Namespace('compiler',description='Check if the given c source code can be compiled successfully.')
 
 
 # Defining raw code model
