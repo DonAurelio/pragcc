@@ -138,6 +138,8 @@ docker run -d -v ${PWD}:/usr/src/app --name pragcc -p 5001:5001 pragcc
 
 ## Known Issues
 
+* The is not errors handling.
+* If the parallel.yml file has not a correct format the annotation process can fail or the resulted code is not annotated. So the user needs to know what happend.
 * The code to parallelize must be c99 source code. which is the version of C supported by **pycpasrer**.
 * The code must have at least two **include headers**.
 * The code should be organized as follows.
@@ -209,6 +211,7 @@ int main(int argc, char const **argv)
 
 -[] Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.
 -[] Solve **include headers** issue.
+-[] Add error handling.
 
 ## References
 
