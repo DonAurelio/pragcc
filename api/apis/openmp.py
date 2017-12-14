@@ -9,7 +9,7 @@ api = Namespace('openmp',description='Annotate code with OpenMP compiler directi
 
 
 # Defining cafile json model
-Code = api.model('Code',{
+Files = api.model('Files',{
     'raw_parallel_file': fields.String(
         required=True,
         description='A description about how the C source should be parallelized or annotated.',
@@ -33,7 +33,7 @@ class OpenMP(Resource):
         data = {}
         return data
 
-    @api.expect(Code)
+    @api.expect(Files)
     def post(self):
         """Returns C99 source code annotated with OpenMP compiler directives."""
 

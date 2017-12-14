@@ -109,3 +109,37 @@ functs:
              reduction: '+:sum'
              # indepedent: True
 """
+
+# The following parallel.yml file does not work because it not follows the 
+# correct parallel file format
+NON_WORKING_PARALLEL_FILE = """
+name: 'stencil'
+description: |
+    Linealized matrix template with stencil parallel programming pattern.
+    support OpenMP loop coarse grain parallelization and OpenACC fine
+    grain parallelization. 
+functs:
+    all: # Defines the functions available in the template
+        - main
+        - initialize
+        - function
+        - neighborhood
+        - evolve
+    editable: # Defines just the functions that can be modified by the user
+        - initialize
+        - function
+    parallel: # Defines just the functions that are paralleizable and hoy to parallelize them
+        evolve:
+            openmp:
+                - loop_nro: 0
+                  private:
+                    - i
+                    - j  
+                - loop_nro: 1
+                  shared: # First loop from the code
+                    - in
+                    - out
+                  default: none 
+        otherfunction:
+            openacc:[]
+"""

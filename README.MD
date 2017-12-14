@@ -2,7 +2,7 @@
 
 This tool is a  initiative for a [Source-to-Source Parallelizing Compiler (or transpiler)](https://en.wikipedia.org/wiki/Automatic_parallelization) written in **Python** which relies on the [pycparser](https://github.com/eliben/pycparser) to annotate a C99 source code with OpenMP and OpenACC directives given a metadata file called **Parallel File**.
 
-## Example
+## A Brew Example
 
 Suppose we have to parallelize the code of the following function:
 
@@ -97,7 +97,7 @@ void evolve(bool * in, bool * out)
 
 **Note: The correct paralelization of the program depends of how the Parallel File is defined.**
 
-# Tests
+## Running the application
 
 Before performing tests you need to clone [this repository](https://github.com/DonAurelio/pycparser) which is a forked version from the original pycpasrer, copy the content of the **pycparser** folder and place it into the **pragcc/core/parser/c99/pycparser** folder. 
 
@@ -108,6 +108,8 @@ the root directory.
 pip3 install -r ./pragcc/requirements.txt
 python3 tests/pragcc.py
 ```
+
+### Pragcc API-REST
 
 To test the **Pragcc API-REST**, install the api module requirements and init the api server as follows:
 
@@ -123,7 +125,7 @@ The application expose the following endpoints to interact with.
 | POST | http://[hostname]/pragcc/openmp | Returns a c99 source code annotated with OpenMP directives |
 
 
-# Deployment with Docker
+### Running with Docker
 
 Perform the following commands to build the **catt** image, then to run the **catt** API in a container. These command need to be 
 performed form the catt project root directory.
@@ -133,11 +135,82 @@ docker build -t pragcc .
 docker run -d -v ${PWD}:/usr/src/app --name pragcc -p 5001:5001 pragcc
 ```
 
-# Todo
 
-* Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.
+## Known Issues
 
-# References
+* The code to parallelize must be c99 source code. which is the version of C supported by **pycpasrer**.
+* The code must have at least two **include headers**.
+* The code should be organized as follows.
+```c
+/* Headers */
+#include <stdlib.h>            /* Standard Library: malloc, calloc, free, ralloc */
+#include <stdbool.h>        /* Bool type libary */
+
+/* Declarations */
+#define RowDim 20
+#define ColDim 20
+#define Generations 20
+
+#define MOD(a,b) ((((a)%(b))+(b))%(b))
+
+struct Neighborhood
+{
+    
+    bool left;
+    
+    bool right;
+    
+    bool up;
+    
+    bool down;
+    
+};
+
+
+/* Functions */
+void evolve(bool * in, bool * out)
+{
+    struct Neighborhood nbhd;
+    bool * temp = in;
+
+    for (int i = 1; i <= Generations; ++i)
+    {
+        for (int i = 0; i < (RowDim*ColDim); ++i)
+        {
+            nbhd = neighborhood(in,i);
+            out[i] = function(nbhd);
+        }
+
+        temp = in;
+        in = out;
+        out = temp;
+    }
+}
+
+int main(int argc, char const **argv)
+{
+
+    bool * in = (bool *) malloc(RowDim*ColDim*sizeof( bool ));
+    bool * out = (bool *) malloc(RowDim*ColDim*sizeof( bool ));
+
+    initialize(in);
+    initialize(out);
+    evolve(in,out);
+
+    /* -- Releasing resources -- */
+    free(in);
+    free(out);
+
+    return EXIT_SUCCESS;
+}
+```
+
+## Todo
+
+-[] Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.
+-[] Solve **include headers** issue.
+
+## References
 
 [Structured Parallel Programming: Patterns for Efficient Computation](https://www.amazon.com/Structured-Parallel-Programming-Efficient-Computation/dp/0124159931)
 

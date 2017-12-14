@@ -10,7 +10,7 @@ api = Namespace('compiler',description='Check if the given c source code can be 
 
 
 # Defining raw code model
-code = api.model('Code',{
+CCode = api.model('CCode',{
     'raw_c_code': fields.String(
         required=True,
         description='The C source code to be compiled.',
@@ -29,7 +29,7 @@ class Gcc(Resource):
         data = {}
         return data
 
-    @api.expect(code)
+    @api.expect(CCode)
     def post(self):
         """Check if a C program compile correctly."""
 

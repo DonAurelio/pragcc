@@ -15,7 +15,16 @@ TEST_DIR = os.path.join(BASE_DIR,'files')
 
 
 def test_code_parsing():
-    """Test parser.c99.parser."""
+    """Test parser.c99.parser.
+
+    Cheking if the pycparser parse he given source 
+    code correctly.
+
+    If the parse is successfull we will get a dict 
+    containin the c99 source code data. Otherwise
+    the code will fail.
+
+    """
     from pragcc.core.parser.c99 import parser
     file_path = os.path.join(TEST_DIR,'stencil.c')
 
@@ -24,7 +33,17 @@ def test_code_parsing():
     pprint.pprint(code_data)
 
 def test_code_object_from_file():
-    """Test code.CCode. reading a c99 source code from a file."""
+    """Test code.CCode. reading a c99 source code from a file.
+
+    Checking if a code.CCode instance can be generated correctly.
+    A CCode instance contains the data of a given c99 source
+    code, it allows the code inspection and edition through 
+    its methods.
+
+    If the CCode instance can be generated, we show 
+    the raw code property of the instance. Otherwise
+    the code will fail.
+    """
     from pragcc.core import code
 
     new_raw_code = """
@@ -64,7 +83,17 @@ void evolve(bool * in, bool * out)
     # print(ccode.raw)
 
 def test_code_object_from_text():
-    """Test code.CCode. reading a c99 source code from a text."""
+    """Test code.CCode. reading a c99 source code from a text.
+
+    Checking if a code.CCode instance can be generated correctly.
+    A CCode instance contains the data of a given c99 source
+    code, it allows the code inspection and edition through 
+    its methods.
+
+    If the CCode instance can be generated, we show 
+    the raw code property of the instance. Otherwise
+    the code will fail.
+    """
     from pragcc.core import code
 
     raw_code = """
@@ -112,6 +141,12 @@ void evolve(bool * in, bool * out)
 
 
 def test_parallel_metadata():
+    """ Test the metadata.Parallel. reading parallel metadata from file.
+
+    Checking if a metadata.Parallel instance can be created with the
+    data contained in a parallel.yml file.
+
+    """
     from pragcc.core import metadata
 
     file_path = os.path.join(TEST_DIR,'parallel.yml')
@@ -121,6 +156,13 @@ def test_parallel_metadata():
     return parallelfile
 
 def test_code_parallelizer():
+    """ Test the parallelizer.OpenMP and OpenACC. 
+
+    Checking if given a metadata.Parallel instance and 
+    a path to a given c99 source file, a parallelization
+    or code annotation can be performed.
+
+    """
     from pragcc.core import parallelizer
 
     file_path = os.path.join(TEST_DIR,'stencil.c')
