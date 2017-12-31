@@ -34,14 +34,28 @@ class Gcc(Resource):
         """Check if a C program compile correctly."""
 
         data = request.json
-        raw_c_code = data['raw_c_code']
+        raw_c_code = data.get('raw_c_code',None)
+
+        if not raw_c_code:
+            message = 'Raw c code was not provided'
+            return message, 400
 
         manager = GccManager()
         stdout, stderror = manager.compile_raw_code(raw_c_code)
 
         if stderror:
-            response = (stderror, 400)
-        else:
-            response = ({'message':'Compilation successfull !!'}, 200)
+            message = {
+                'message':(
+                    "The code can't be compiled correctly,"
+                    " please look for errors in the code."
+                ),
+                'error': stderror
+            }
 
-        return response
+            return message, 400
+
+        data = {
+            'message':'Compilation successfull !!'
+        }
+        
+        return data, 200

@@ -115,7 +115,7 @@ def parse_cfile(file_path,preprocesor='cpp'):
 
 
 def get_data_from_cfile(file_path,compiler='gcc'):
-    """Divide a C99 source code in sections.
+    """Split a C99 source code in sections.
 
     Use pycparser to parse a C99 source code and dive it into three sections.
     **include**, **declaration**, **functions**. 
@@ -181,3 +181,5 @@ def get_data_from_cfile(file_path,compiler='gcc'):
             funcdef_data['raw'] = ''.join(code_lines[begin:end])
 
     return code_data
+
+# pragcc.core.parser.c99.pycparser.plyparser.ParseError
