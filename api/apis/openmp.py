@@ -55,11 +55,19 @@ class OpenMP(Resource):
             return message, 400
 
         # Checking if source code compiles 
-        # manager = GccManager()
-        # stdout, stderror = manager.compile_raw_code(raw_c_code)
+        manager = GccManager()
+        stdout, stderror = manager.compile_raw_code(raw_c_code)
 
-        # if stderror:
-        #     return stderror, 400
+        if stderror:
+            data = {
+                'message': (
+                    'The code can be parallelized because '
+                    'it does not compile correctly, please '
+                    'compile and look for erros in the code.'
+                ),
+                'error': stderror
+            }
+            return data, 400
 
 
         manager = OpenMPManager()
