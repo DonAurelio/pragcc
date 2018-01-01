@@ -36,8 +36,8 @@ class OpenMPManager(object):
             
             data = None
             error = (
-                "Probably, the functions specified in the L file do not match"
-                "the functions that exist in the source code."
+                "Probably, the functions specified in the parallel.yml file do not match "
+                "the functions that are present in the source code."
             )
             return data, error
 
