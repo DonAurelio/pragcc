@@ -70,10 +70,20 @@ class OpenMP(Resource):
             return data, 400
 
 
+        # Performing code parallelization
         manager = OpenMPManager()
-        code_data = manager.get_annotated_code_data(
+        code_data, error = manager.get_annotated_code_data(
             raw_parallel_file=raw_parallel_file,
             raw_c_code=raw_c_code
         )
+
+        if error:
+
+            data = {
+                'message': "The code can not be parallelized !!",
+                'error': error
+            }
+
+            return data, 400 
 
         return code_data

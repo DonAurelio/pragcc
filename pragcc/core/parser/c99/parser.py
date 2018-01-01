@@ -181,5 +181,3 @@ def get_data_from_cfile(file_path,compiler='gcc'):
             funcdef_data['raw'] = ''.join(code_lines[begin:end])
 
     return code_data
-
-# pragcc.core.parser.c99.pycparser.plyparser.ParseError
