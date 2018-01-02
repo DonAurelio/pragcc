@@ -98,7 +98,7 @@ class ForVisitor(pycparser.c_ast.NodeVisitor):
 
     @staticmethod
     def _for_loops(node,loop_depth=0):
-        """Returns a list of pycparser.c_ast.For objects founded in the AST ."""
+        """Return a list of pycparser.c_ast.For objects founded in the AST ."""
         loops = []
         new_loop_depth = loop_depth
         if isinstance(node,pycparser.c_ast.For):
@@ -112,26 +112,76 @@ class ForVisitor(pycparser.c_ast.NodeVisitor):
 
     @staticmethod
     def _for_loop_data(funcdef,loop,nro):
+        """Return the data of a single loop inside a function.
+
+        A typical loop consists of 4 parts. an initialization,
+        a condition, the next value of an iterator (for example i)
+        and the body of the loop called statement (stmt). Then the
+        loob body can be presented in two ways, as depicted in the
+        ``Example``.
+
+        for (init; cond; next) stmt;
+
+        Example:
+
+            for (int i=0; i < N; ++i) function(); // single statement
+
+            or 
+
+            for (int i=0; i < N; ++i) { // Compound node init
+                    
+            } // compound node endding 
+
+        Returns:
+            dict, the relevant data of the given function loop.
+
+        """
         data = {}
         depth = loop[0]
         loop_obj = loop[1]
-
         data['nro'] = nro
         data['depth'] = depth
         data['begin'] = {
             'relative': loop_obj.coord.line - funcdef.decl.coord.line,
             'absolute': loop_obj.coord.line
         }
-        data['end'] = {
-            'relative': loop_obj.stmt.end_coord.line - funcdef.decl.coord.line,
-            'absolute': loop_obj.stmt.end_coord.line
-        }
+
+        # If the loop body has the attribite end_coord, it mean that 
+        # stmt is a compound object so the loop ends where the compound
+        # node ends.
+        if hasattr(loop_obj.stmt,'end_coord'):
+            data['end'] = {
+                'relative': loop_obj.stmt.end_coord.line - funcdef.decl.coord.line,
+                'absolute': loop_obj.stmt.end_coord.line
+            }
+
+        # Otherwise the loop body has a single statement, that can be 
+        # a function call or some operation. Thus the loop ends in the
+        # same line where it starts.
+        else:
+            data['end'] = {
+                'relative': loop_obj.coord.line - funcdef.decl.coord.line,
+                'absolute': loop_obj.coord.line
+            }
 
         return data
 
     @staticmethod
     def for_loops_data(funcdef):
+        """Return data of loops for a given function.
+
+        Args:
+            funcdef (pycparser.c_ast.FuncDef): function from 
+                which it is necessary to extract information 
+                from the loops.
+        Returns:
+            List[dict], a list containing relevant information
+                about loops in the given function.
+        """
+        # Getting For loops objects of the given 
+        # function definition from the AST
         for_loops = ForVisitor._for_loops(funcdef)
+
         loops_data = []
         for i ,loop in enumerate(for_loops):
             loops_data.append(ForVisitor._for_loop_data(funcdef,loop,i))
