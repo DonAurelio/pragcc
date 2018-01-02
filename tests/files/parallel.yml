@@ -18,11 +18,13 @@ functs:
       omp:
         # Parallel directive, apply or enclose the loops defined in the for directive
         parallel:
+          scope: 0
           # Parallel directive clauses
-          num_threads: int
-          shared: (list)
-          copyin: (list)
-          default: (shared|none)
+          clauses:
+            num_threads: int
+            shared: (list)
+            copyin: (list)
+            default: (shared|none)
         # For directive list of loops to parlellize in the function
         for:
           # Loop, the second lexicographic loop inside the function evolve.

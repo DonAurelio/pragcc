@@ -22,6 +22,14 @@ class TestCCodeParsing(unittest.TestCase):
         self._bool_type_2 = os.path.join(TEST_DIR,'bool_type_2.c')
         self._bool_type_3 = os.path.join(TEST_DIR,'bool_type_3.c')
 
+    def tearDown(self):
+        # os.remove(os.path.join(TEST_DIR,'fake_basic.c'))
+        # os.remove(os.path.join(TEST_DIR,'fake_complex.c'))
+        # os.remove(os.path.join(TEST_DIR,'fake_empty.c'))
+        # os.remove(os.path.join(TEST_DIR,'fake_bool_type_1.c'))
+        # os.remove(os.path.join(TEST_DIR,'fake_bool_type_2.c'))
+        # os.remove(os.path.join(TEST_DIR,'fake_bool_type_3.c'))
+
     def test_parse_basic_cfile(self):
         ast = parser.parse_cfile(file_path=self._basic)
         self.assertIsInstance(ast,FileAST)
