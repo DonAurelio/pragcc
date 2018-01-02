@@ -123,12 +123,11 @@ class OpenMP(BaseParallelizer):
             file_path=file_path, raw_code=raw_code
         )
 
-    def get_parallel_pragma(self,function_name,directives):
+    def get_parallel_pragma_insertions(self,function_name,directives):
         """Returns a set of insertions to be performed in a given function.
 
         Returns the inserts that must be made to include the parallel 
         pragma in the body of the function with the given function_name.
-
 
         Args:
             function_name (str): The name of te function we want to
@@ -148,7 +147,7 @@ class OpenMP(BaseParallelizer):
             line in the code. The insetion line number is relative to
             the function line number.
 
-            If the given function_name is **sum**.
+            For example, if the given function_name is **sum**.
 
             13 void sum(int * A, int * B, int * C)
             14 {
@@ -158,37 +157,37 @@ class OpenMP(BaseParallelizer):
             18    }
             19 }
 
-            And the **directives** as they are in the parallefile:
+            And the **directives** as they are in the paralle.yml file:
 
-            # Parallel directive, apply or enclose the loops defined in the for directive
+            ...
             parallel:
-              # Parallel directive clauses
-              num_threads: 4
-            # For directive list of loops to parlellize in the function
-            for:
-              # Loop, the second lexicographic loop inside the function evolve.
-              - nro: 1 
+                scope: 0
                 clauses:
-                  private: [i,j]
+                    num_threads: 4
+            ...
 
             The set of inserts is:
 
-            [('#pragma omp parallel num_threads(4)',)]
+            [
+                ('#pragma omp parallel num_threads(4)',14),
+                ('{',14),
+                ('}',19)
+            ]
         
         """
         insertions = []
         if 'parallel' in directives:
-            clauses = directives['parallel']
+            properties = directives.get('parallel','')
+            clauses = properties.get('clauses','')
             raw_pragma = self.get_raw_pragma('parallel',clauses)
 
-            loops_directives = directives['for']
+            # Determining the scope of the parallel pragma
+            scope = properties.get('scope','')
 
-            if loops_directives:
-                first_loop = loops_directives[0]
-                first_loop_nro = self._metadata.get_loop_nro(first_loop)
-
-                begin, end = self._code.get_for_loops_scope(
-                    function_name,first_loop_nro)
+            # If in the parallel directive properties is not present 
+            # the scope property no insertions are performed
+            if scope:
+                begin, end = self._code.get_for_loops_scope(function_name,scope)
 
                 insertions = [
                     (raw_pragma,begin),
@@ -220,7 +219,7 @@ class OpenMP(BaseParallelizer):
         #  Available directives
 
         # Parallel directive insetions (THIS FEATURE DO NOT WORK PROPERLY)
-        insertions += self.get_parallel_pragma(function_name,directives)
+        insertions += self.get_parallel_pragma_insertions(function_name,directives)
         
         # For pragmas directives insertions
         insertions += self.get_for_pragmas(function_name,directives)

@@ -51,7 +51,7 @@ class CCode(object):
             # The data dict can't be None
             raise ValueError(
                 """file_path or raw_code kwargs any of these 
-                parameters must be configured"""
+                parameters must be given."""
             )
             
     @property
