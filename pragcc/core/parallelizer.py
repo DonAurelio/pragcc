@@ -209,7 +209,41 @@ class OpenMP(BaseParallelizer):
         return insertions
 
     def get_parallel_for_directive_inserts(self,function_name,directives):
-        """Returns the inserts needed to include the parallel for directive."""
+        """Returns the parallel for directive raw code.
+
+        Returns the inserts that must be made to include the parallel for
+        directive in the body of the function with the given function_name.
+
+        Given the function 'sum'
+
+        0 void sum(int * A, int * B, int * C)
+        1 {
+        2    for (int i = 0; i < 1000; ++i) // loop_nro = 0 
+        3    {
+        4       C[i] = A[i] + B[i];
+        5    }
+        6 }
+
+        ...
+        parallel_for:
+            - nro: 0                # loop_nro = 0
+              clauses:
+                private:[i]
+                reduction: '+:sum'
+            - nro: 1                # This loop does not exist.
+              clauses:
+                private:[j]
+        ...
+
+        The algoritm generate a set of insertions for each item in
+        the parallel_for list. If there is an item who nro is not in 
+        the source code data, that item does not generate insertions.
+        Then only one insetion is generated.
+
+        [
+            ('#pragma omp parallel for private(i) reduction(+:sum)',2),
+        ]
+        """
 
         insertions = []
         if 'parallel_for' in directives:
