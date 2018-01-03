@@ -5,62 +5,20 @@ from . import metadata
 
 
 class BaseParallelizer(object):
-
-    _PARALLEL_METHOD = 'no method'
-
-    def __init__(self,metadata=None,file_suffix='parallel_',file_path=None,raw_code=None):
-        """This base class defines generic functions to code paralelization.
-
-        Args:
-            metadata (metadata.ParallelFile): A file in YML format containing
-                information about how to paralleize the given code.
-            file_suffix (str): The suffix of the intermediate file created. 
-            file_path (Optional[str]): A unique path to the file to be parallelized.
-            raw_code (Optional[str]): The raw code to be parallelized. 
-        """
-
-        #: code.CCode: An instance that contains the information about the code.
-        self._code = code.CCode(
-            file_suffix=file_suffix,file_path=file_path,raw_code=raw_code
-        )
-        #: metadata.ParallelFile: A the parallel file data
-        self._metadata = metadata
-
-
-    def get_raw_pragma(self,directive_name,clauses):
-        """Returns a raw pragma with its clausules.
-
-        Args:
-            directive_name (str): An OpenMP directive.
-            clauses (dict): OpenMP clauses name an its arguments.
-
-        Returns: 
-            A raw OpenMP directive.
-        """
-        raw_pragma = '#pragma %s %s %s'
-        raw_clauses = ''
-
-        for clause, value in clauses.items():
-            raw_clauses += clause
-
-            if type(value) is list:
-                raw_clauses +=  str(tuple(value)) + ' '
-            else:
-                raw_clauses += '(' + value + ') '
-
-            raw_clauses = raw_clauses.replace("'","")
-
-        return raw_pragma % (self._PARALLEL_METHOD,directive_name,raw_clauses)
+    """Define a set of functions required on each paralelization method."""
 
     @staticmethod
     def insert_lines(raw,insertions=[]):
-        """Given a raw section of code, perfonms a set of insertions on it.
+        """Given a raw string, perfonms a set of insertions on it.
 
         Args:
-            raw (str): The raw code on which the raw OpenMP directives
-                must be inserted.
-            insertions (List[str]): A list of directives to be inserted 
-                in the given section of raw code. 
+            raw (str): The string on which some string insertions
+                must be performed.
+            insertions (List[tuple(str,int,int)]): A list of directives 
+                to be inserted in the given section of raw code.
+
+        Returns:
+            str, a raw string with some insertions performed on it.
         """
         lines = raw.splitlines()
         numbered_lines = list(enumerate(lines))
@@ -80,6 +38,18 @@ class BaseParallelizer(object):
 
         return '\n'.join([code[1] for code in numbered_lines])
 
+    def get_raw_pragma(self,directive_name,clauses):
+        """Returns a raw pragma with its clausules.
+
+        Args:
+            directive_name (str): An OpenMP directive.
+            clauses (dict): OpenMP clauses name an its arguments.
+
+        Returns: 
+            A raw OpenMP directive.
+        """
+        raise NotImplementedError('This method needs to be implemented')
+
     def insert_directives(self,function_name,directives):
         """Insert a set of directive on the given function.
 
@@ -98,30 +68,65 @@ class BaseParallelizer(object):
 
 
         """
-        pass
+        raise NotImplementedError('This method needs to be implemented')
 
-    def parallelize(self):
-        """Performs the code paralelization."""
-        pass
-
-
-class OpenMP(BaseParallelizer):
-
-    _PARALLEL_METHOD = 'omp'
-
-    def __init__(self,metadata=None,file_path=None,raw_code=None):
-        """Performs OpenMP directives annotation to the given code.
+    def parallelize(self,metadata):
+        """Performs the code paralelization.
 
         Args:
             metadata (metadata.ParallelFile): A file in YML format containing
                 information about how to paralleize the given code.
-            file_path (Optional[str]): A unique path to the file to be parallelized.
-            raw_code (Optional[str]): The raw code to be parallelized.
         """
-        super(OpenMP,self).__init__(
-            metadata=metadata, file_suffix='omp_',
-            file_path=file_path, raw_code=raw_code
+        raise NotImplementedError('This method needs to be implemented')
+
+
+class OpenMP(BaseParallelizer):
+
+    def __init__(self,file_path=None,raw_code=None):
+        """Allow code parallelization with OpenMP compiler directives.
+
+        Args:
+
+            file_suffix (str): The suffix of the intermediate file created. 
+            file_path (Optional[str]): A unique path to the file to be parallelized.
+            raw_code (Optional[str]): The raw code to be parallelized. 
+        """
+
+        #: code.CCode: An instance that contains the information about the ccode.
+        self._code = code.CCode(
+            file_suffix='omp_',
+            file_path=file_path,
+            raw_code=raw_code
         )
+
+    def get_raw_pragma(self,directive_name,clauses):
+        """Returns a raw pragma with its clausules.
+
+        Args:
+            directive_name (str): An OpenMP directive.
+            clauses (dict): OpenMP clauses name an its arguments.
+
+        Returns: 
+            A raw OpenMP directive.
+        """
+        raw_pragma = '#pragma omp %s %s'
+        raw_clauses = ''
+
+        for clause_name, value in clauses.items():
+            raw_clauses += clause_name
+
+            if type(value) is list:
+                raw_clauses += '(' + ','.join(value) + ') '
+
+            elif type(value) is int:
+                raw_clauses += '(' + str(value) + ') '
+
+            else:
+                raw_clauses += '(' + value + ') '
+
+            # raw_clauses = raw_clauses.replace("'","")
+
+        return raw_pragma % (directive_name,raw_clauses)
 
     def get_parallel_pragma_insertions(self,function_name,directives):
         """Returns a set of insertions to be performed in a given function.
@@ -231,7 +236,8 @@ class OpenMP(BaseParallelizer):
 
         return insertions
 
-    def parallelize(self):
+    def parallelize(self, metadata):
+        self._metadata = metadata
         openmp = metadata.ParallelFile.OMP
         functs_directives = self._metadata.get_directives(openmp)
         for funct_name, directives in functs_directives:

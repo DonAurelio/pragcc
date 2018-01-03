@@ -146,7 +146,31 @@ class TestBaseParallelizer(unittest.TestCase):
             self._base_parallelizer.parallelize(metadata=None)
 
 
+RAW_CODE_SIMPLE_LOOP = """
+#include <stdlib.h>
+#include <stdio.h>
+
+#define N 10
+
+void some_function(){
+
+    int A[N];
+    int B[N];
+    int C[N];
+
+    for(int i=0; i<N; ++i){
+        C[i] = A[i] + B[i];
+    }    
+}
+
+int main(){
+    some_function();
+}
+""" 
+
 class TestOpenMP(unittest.TestCase):
+
+
 
     def setUp(self):
 
@@ -263,8 +287,79 @@ class TestOpenMP(unittest.TestCase):
         omp = parallelizer.OpenMP(file_path=self._bool_type_3)
         self.assertIsInstance(omp,parallelizer.OpenMP)
 
-    def test_openmp_parallelization_from_complex_code_file(self):
-        omp = parallelizer.OpenMP(file_path=self._complex)
+    def test_openmp_parallel_directive(self):
+        omp = parallelizer.OpenMP(raw_code=RAW_CODE_SIMPLE_LOOP)
 
-        ccode = omp.parallelize()
-        self.assertIsInstance(ccode,code.CCode)
+        data = {
+            'vesion': 1.0,
+            'name': 'stencil',
+            'description': 'Linealized matrix template with stencil parallel programming pattern. ...',
+            'functs': {
+                'all': ['main','some_function'],
+                'parallel': {
+                    'some_function': {
+                        'omp': {
+                            'parallel':{
+                                'scope':0,
+                                'clauses': {
+                                    'num_threads': 4,
+                                    'shared': ['A','B','C'],
+                                    'default': 'none'
+                                }
+                            }
+                        } 
+                    }
+                }
+            }
+        }
+
+        parallel_metadata = metadata.ParallelFile(data=data)
+
+        # Retuns a tuple of tuples, where each tuple is a function name and 
+        # the directives specified for that function
+        functions_directives = parallel_metadata.get_directives('omp')
+
+        function_name, directives = functions_directives[0]
+
+        self.assertEqual(function_name,'some_function')
+        self.assertDictEqual(
+            directives,
+            {
+                'parallel':{
+                    'scope':0,
+                    'clauses': {
+                        'num_threads': 4,
+                        'shared': ['A','B','C'],
+                        'default': 'none'
+                    }
+                }
+            }
+        )
+
+        parallel = directives.get('parallel')
+        clauses = parallel.get('clauses')
+
+        # Checking pragma string generation
+        pragma = omp.get_raw_pragma(directive_name='parallel',clauses=clauses)
+        expected_pragma = '#pragma omp parallel num_threads(4) shared(A,B,C) default(none) '
+
+        # The generated string conserve the order of '#pragma omp parallel' string
+        # but clauses can change order, thus both string pragmas are equivalent if
+        # they has the same words. Which is equivalent to saying f the two sets have
+        # exactly the same elements
+
+        # ['#pragma', 'omp', 'parallel', 'num_threads(4)', 'default(none)', 'shared(A,B,C)', '']
+        # ['#pragma', 'omp', 'parallel', 'num_threads(4)', 'default(none)', 'shared(A,B,C)', '']
+
+
+        pragma = set(pragma.split(' '))
+        expected_pragma = set(expected_pragma.split(' '))
+        
+
+        self.assertEqual(pragma,expected_pragma)
+
+        # get_raw_pragma(self,directive_name,clauses)
+        # get_parallel_pragma_insertions(self,function_name,directives)
+
+        # ccode = omp.parallelize()
+        # self.assertIsInstance(ccode,code.CCode)
