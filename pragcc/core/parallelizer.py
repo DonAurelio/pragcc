@@ -99,6 +99,10 @@ class OpenMP(BaseParallelizer):
             raw_code=raw_code
         )
 
+    @property
+    def code(self):
+        return self._code
+
     def get_raw_pragma(self,directive_name,clauses):
         """Returns a raw pragma with its clausules.
 

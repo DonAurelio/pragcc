@@ -342,7 +342,9 @@ class TestOpenMP(unittest.TestCase):
             }
         )
 
-        # PARALLELIZATION STEPS 
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
 
         # Getting a directive from the metadata
         parallel = directives.get('parallel')
@@ -362,6 +364,8 @@ class TestOpenMP(unittest.TestCase):
         # ['#pragma', 'omp', 'parallel', 'default(none)', 'num_threads(4)', 'shared(A,B,C)', '']
         
         self.assertEqual(set(pragma.split(' ')) ,set(expected_pragma.split(' ')))
+
+        # 2) Creating an insertion to place the pragma in the code.
 
         # Generating the insertions needed to place the pragma in the source code.
         insertions = omp.get_parallel_pragma_insertions(
@@ -391,5 +395,30 @@ class TestOpenMP(unittest.TestCase):
 
         self.assertEqual(insertions,expected_insetions)
 
-        # ccode = omp.parallelize()
-        # self.assertIsInstance(ccode,code.CCode)
+        # 3) Code insertion
+
+        raw_code = omp.code.get_function_raw(function_name)
+        new_raw_code = omp.insert_lines(raw_code,insertions)
+
+        # 0  void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6  #pragma omp parallel num_threads(4) shared(A,B,C) default(none)
+        # 7  {
+        # 8     for(int i=0; i<N; ++i){
+        # 9         C[i] = A[i] + B[i];
+        # 10    }    
+        # 11 }
+        # 12 }
+
+        new_raw_code_lines = new_raw_code.splitlines()
+        pragma_line = new_raw_code_lines[6]
+        left = new_raw_code_lines[7]
+        right = new_raw_code_lines[11]
+
+        self.assertEqual(pragma_line,pragma)
+        self.assertEqual(left,'{')
+        self.assertEqual(right,'}')
