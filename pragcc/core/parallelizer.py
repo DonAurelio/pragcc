@@ -210,7 +210,8 @@ class OpenMP(BaseParallelizer):
 
     def get_parallel_for_directive_inserts(self,function_name,directives):
         """Returns the inserts needed to include the parallel for directive."""
-        
+
+        insertions = []
         if 'parallel_for' in directives:
             loops_directives = directives['parallel_for']
             for loop_directive in loops_directives:

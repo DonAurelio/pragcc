@@ -303,7 +303,17 @@ class TestOpenMPParallelization(unittest.TestCase):
                                     'shared': ['A','B','C'],
                                     'default': 'none'
                                 }
-                            }
+                            },
+                            'parallel_for': [
+                                {
+                                    'nro':0,
+                                    'clauses': {
+                                        'private': ['i'],
+                                        'reduction': '+:sum',
+                                        'colapse': 3
+                                    }
+                                }
+                            ]
                         } 
                     }
                 }
@@ -313,7 +323,7 @@ class TestOpenMPParallelization(unittest.TestCase):
         # Creating a parallel metadata object 
         self._parallel = metadata.ParallelFile(data=data)
 
-    def test_openmp_parallel_directive(self):
+    def test_parallel_directive(self):
 
         # Getting the OpenMP directives of each function from
         # the metadata object. 
@@ -325,15 +335,13 @@ class TestOpenMPParallelization(unittest.TestCase):
 
         self.assertEqual(function_name,'some_function')
         self.assertDictEqual(
-            directives,
+            directives.get('parallel'),
             {
-                'parallel':{
-                    'scope':0,
-                    'clauses': {
-                        'num_threads': 4,
-                        'shared': ['A','B','C'],
-                        'default': 'none'
-                    }
+                'scope':0,
+                'clauses': {
+                    'num_threads': 4,
+                    'shared': ['A','B','C'],
+                    'default': 'none'
                 }
             }
         )
@@ -418,3 +426,87 @@ class TestOpenMPParallelization(unittest.TestCase):
         self.assertEqual(pragma_line,pragma)
         self.assertEqual(left,'{')
         self.assertEqual(right,'}')
+
+    def test_parallel_for_directive(self):
+
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = self._parallel.get_directives('omp')
+
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
+
+        # Getting first function directives
+        function_name, directives = functions_directives[0]
+
+        # Getting a directive from the metadata
+        parallel_fors = directives.get('parallel_for')
+        # Getting the clauses of that directive
+        first_for = parallel_fors[0]
+        clauses = first_for.get('clauses')
+
+        # Constructing the OpenMP raw pragma with the directive name a clauses
+        pragma = self._omp.get_raw_pragma(directive_name='parallel for',clauses=clauses)
+        expected_pragma = '#pragma omp parallel for private(i) reduction(+:sum) colapse(3) '
+
+        # The generated string conserve the order of '#pragma omp parallel' string
+        # but clauses can change order, thus both string pragmas are equivalent if
+        # they has the same words. Which is equivalent to saying f the two sets have
+        # exactly the same elements
+
+        # ['#pragma', 'omp', 'parallel', 'num_threads(4)', 'default(none)', 'shared(A,B,C)', '']
+        # ['#pragma', 'omp', 'parallel', 'default(none)', 'num_threads(4)', 'shared(A,B,C)', '']
+        
+        self.assertEqual(set(pragma.split(' ')) ,set(expected_pragma.split(' ')))
+
+        # 2) Creating an insertion to place the pragma in the code.
+
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = self._omp.get_parallel_for_directive_inserts(
+            function_name=function_name,
+            directives=directives
+        )
+
+        # The insertion has the follwing format (raw_code,line_number)
+        # the line_number is relative to the function.
+
+        # 0 void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6     for(int i=0; i<N; ++i){
+        # 7         C[i] = A[i] + B[i];
+        # 8     }    
+        # 9 }
+
+        expected_insetions = [
+            (pragma,6)
+        ]
+
+        self.assertEqual(insertions,expected_insetions)
+
+        # 3) Code insertion
+
+        raw_code = self._omp.code.get_function_raw(function_name)
+        new_raw_code = self._omp.insert_lines(raw_code,insertions)
+
+        # 0  void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6 #pragma omp parallel for private(i) reduction(+:sum) colapse(3)
+        # 7    for(int i=0; i<N; ++i){
+        # 8         C[i] = A[i] + B[i];
+        # 9    }    
+        # 10
+        # 11 }
+
+        new_raw_code_lines = new_raw_code.splitlines()
+        pragma_line = new_raw_code_lines[6]
+
+        self.assertEqual(pragma_line,pragma)
