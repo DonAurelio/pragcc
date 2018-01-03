@@ -146,31 +146,7 @@ class TestBaseParallelizer(unittest.TestCase):
             self._base_parallelizer.parallelize(metadata=None)
 
 
-RAW_CODE_SIMPLE_LOOP = """
-#include <stdlib.h>
-#include <stdio.h>
-
-#define N 10
-
-void some_function(){
-
-    int A[N];
-    int B[N];
-    int C[N];
-
-    for(int i=0; i<N; ++i){
-        C[i] = A[i] + B[i];
-    }    
-}
-
-int main(){
-    some_function();
-}
-""" 
-
-class TestOpenMP(unittest.TestCase):
-
-
+class TestOpenMPObjectCreation(unittest.TestCase):
 
     def setUp(self):
 
@@ -181,13 +157,6 @@ class TestOpenMP(unittest.TestCase):
         self._bool_type_1 = os.path.join(TEST_DIR,'bool_type_1.c')
         self._bool_type_2 = os.path.join(TEST_DIR,'bool_type_2.c')
         self._bool_type_3 = os.path.join(TEST_DIR,'bool_type_3.c')
-
-        # Loading metadata needed for code annotation with OpenMP directives
-        parallel_file_path = os.path.join(TEST_DIR,'parallel.yml')
-
-        self._parallel_metadata = metadata.ParallelFile(
-            file_path=parallel_file_path
-        )
 
     def tearDown(self):
 
@@ -287,10 +256,35 @@ class TestOpenMP(unittest.TestCase):
         omp = parallelizer.OpenMP(file_path=self._bool_type_3)
         self.assertIsInstance(omp,parallelizer.OpenMP)
 
-    def test_openmp_parallel_directive(self):
 
+RAW_CODE_SIMPLE_LOOP = """
+#include <stdlib.h>
+#include <stdio.h>
+
+#define N 10
+
+void some_function(){
+
+    int A[N];
+    int B[N];
+    int C[N];
+
+    for(int i=0; i<N; ++i){
+        C[i] = A[i] + B[i];
+    }    
+}
+
+int main(){
+    some_function();
+}
+""" 
+
+
+class TestOpenMPParallelization(unittest.TestCase):
+
+    def setUp(self):
         # Creating the OpenMP parallelizer
-        omp = parallelizer.OpenMP(raw_code=RAW_CODE_SIMPLE_LOOP)
+        self._omp = parallelizer.OpenMP(raw_code=RAW_CODE_SIMPLE_LOOP)
 
         # Metadata needed for code parallelization
         data = {
@@ -317,11 +311,13 @@ class TestOpenMP(unittest.TestCase):
         }
 
         # Creating a parallel metadata object 
-        parallel = metadata.ParallelFile(data=data)
+        self._parallel = metadata.ParallelFile(data=data)
+
+    def test_openmp_parallel_directive(self):
 
         # Getting the OpenMP directives of each function from
         # the metadata object. 
-        functions_directives = parallel.get_directives('omp')
+        functions_directives = self._parallel.get_directives('omp')
 
         # Testing the metadata object has the same data that was
         # given to it.
@@ -347,12 +343,12 @@ class TestOpenMP(unittest.TestCase):
         # 1) Creation of the pragma
 
         # Getting a directive from the metadata
-        parallel = directives.get('parallel')
+        parallel_directive = directives.get('parallel')
         # Getting the clauses of that directive
-        clauses = parallel.get('clauses')
+        clauses = parallel_directive.get('clauses')
 
         # Constructing the OpenMP raw pragma with the directive name a clauses
-        pragma = omp.get_raw_pragma(directive_name='parallel',clauses=clauses)
+        pragma = self._omp.get_raw_pragma(directive_name='parallel',clauses=clauses)
         expected_pragma = '#pragma omp parallel num_threads(4) shared(A,B,C) default(none) '
 
         # The generated string conserve the order of '#pragma omp parallel' string
@@ -368,7 +364,7 @@ class TestOpenMP(unittest.TestCase):
         # 2) Creating an insertion to place the pragma in the code.
 
         # Generating the insertions needed to place the pragma in the source code.
-        insertions = omp.get_parallel_pragma_insertions(
+        insertions = self._omp.get_parallel_directive_inserts(
             function_name=function_name,
             directives=directives
         )
@@ -397,8 +393,8 @@ class TestOpenMP(unittest.TestCase):
 
         # 3) Code insertion
 
-        raw_code = omp.code.get_function_raw(function_name)
-        new_raw_code = omp.insert_lines(raw_code,insertions)
+        raw_code = self._omp.code.get_function_raw(function_name)
+        new_raw_code = self._omp.insert_lines(raw_code,insertions)
 
         # 0  void some_function(){
         # 1
