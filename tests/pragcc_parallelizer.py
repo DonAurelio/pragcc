@@ -13,12 +13,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DIR = os.path.join(BASE_DIR,'files')
 
-SIMPLE_RAW_CODE = """
-1 int main(){
-    for(int i; i < 10; ++i){
 
-    }
-}
+SIMPLE_RAW_CODE = """0
+1 int main(){
+2    for(int i; i < 10; ++i){
+3
+4    }
+5 }
 """
 
 
@@ -26,18 +27,111 @@ class TestBaseParallelizer(unittest.TestCase):
 
     def setUp(self):
         self._parallelizer = parallelizer.BaseParallelizer()
-        self._raw_code = SIMPLE_RAW_CODE
 
     def test_insert_lines_in_raw_code(self):
+        """ Test the code insertion function.
+
+        Example:
+
+            Before insertion
+
+            0
+            1 int main(){
+            2    for(int i; i < 10; ++i){
+            3
+            4    }
+            5 }
+            ---------------------------------
+
+            After insertions
+
+            0
+            1 First insertion
+            2 int main(){
+            3 Second insertion
+            4    for(int i; i < 10; ++i){
+            5
+            6    }
+            7 }
+
+        """
+
         insertions = [
             ('First insertion',1),
             ('Second insertion',2)
         ]
 
-        new_raw = self._parallelizer.insert_lines(self._raw_code,insertions)
+        new_raw = self._parallelizer.insert_lines(
+            SIMPLE_RAW_CODE,
+            insertions
+        )
 
-        print('new_raw',self._raw_code)
+        line_1 = new_raw.splitlines()[1]
+        line_2 = new_raw.splitlines()[3]
 
+        self.assertEqual(line_1,'First insertion')
+        self.assertEqual(line_2,'Second insertion')
+
+    def test_insert_in_invalid_position(self):
+        """ 
+        When insertions have no valid postions, it means
+        no insertions are performed, in that case, an empty
+        string is returned.
+        """
+
+        insertions = [
+            ('First insertion',-1),
+            ('Second insertion',-1)
+        ]
+
+        new_raw = self._parallelizer.insert_lines(
+            SIMPLE_RAW_CODE,
+            insertions
+        )
+
+        self.assertEqual(new_raw,'')
+
+
+    def test_insert_at_least_one_valid_position(self):
+        """ 
+        When at least one insertion in the insertions list
+        has an invalid position, and empty string is returned.
+
+        This is a good behavior, if the result of the program
+        is correct only when all the inserts are carried out
+        successfully.
+        """
+
+        insertions = [
+            ('First insertion',1),
+            ('Second insertion',-2)
+        ]
+
+        new_raw = self._parallelizer.insert_lines(
+            SIMPLE_RAW_CODE,
+            insertions
+        )
+
+        self.assertEqual(new_raw,'')
+
+    def test_insert_in_an_empty_string(self):
+        """ 
+            Inserting code in and empty string. 
+        """
+
+        empty_raw = ''
+
+        insertions = [
+            ('First insertion',1),
+            ('Second insertion',2)
+        ]
+
+        new_raw = self._parallelizer.insert_lines(
+            empty_raw,
+            insertions
+        )
+
+        self.assertEqual(new_raw,'')
 
 
 
