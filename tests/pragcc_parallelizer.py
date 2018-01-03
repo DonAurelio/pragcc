@@ -288,8 +288,11 @@ class TestOpenMP(unittest.TestCase):
         self.assertIsInstance(omp,parallelizer.OpenMP)
 
     def test_openmp_parallel_directive(self):
+
+        # Creating the OpenMP parallelizer
         omp = parallelizer.OpenMP(raw_code=RAW_CODE_SIMPLE_LOOP)
 
+        # Metadata needed for code parallelization
         data = {
             'vesion': 1.0,
             'name': 'stencil',
@@ -313,12 +316,15 @@ class TestOpenMP(unittest.TestCase):
             }
         }
 
-        parallel_metadata = metadata.ParallelFile(data=data)
+        # Creating a parallel metadata object 
+        parallel = metadata.ParallelFile(data=data)
 
-        # Retuns a tuple of tuples, where each tuple is a function name and 
-        # the directives specified for that function
-        functions_directives = parallel_metadata.get_directives('omp')
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = parallel.get_directives('omp')
 
+        # Testing the metadata object has the same data that was
+        # given to it.
         function_name, directives = functions_directives[0]
 
         self.assertEqual(function_name,'some_function')
@@ -336,10 +342,14 @@ class TestOpenMP(unittest.TestCase):
             }
         )
 
+        # PARALLELIZATION STEPS 
+
+        # Getting a directive from the metadata
         parallel = directives.get('parallel')
+        # Getting the clauses of that directive
         clauses = parallel.get('clauses')
 
-        # Checking pragma string generation
+        # Constructing the OpenMP raw pragma with the directive name a clauses
         pragma = omp.get_raw_pragma(directive_name='parallel',clauses=clauses)
         expected_pragma = '#pragma omp parallel num_threads(4) shared(A,B,C) default(none) '
 
@@ -349,17 +359,37 @@ class TestOpenMP(unittest.TestCase):
         # exactly the same elements
 
         # ['#pragma', 'omp', 'parallel', 'num_threads(4)', 'default(none)', 'shared(A,B,C)', '']
-        # ['#pragma', 'omp', 'parallel', 'num_threads(4)', 'default(none)', 'shared(A,B,C)', '']
-
-
-        pragma = set(pragma.split(' '))
-        expected_pragma = set(expected_pragma.split(' '))
+        # ['#pragma', 'omp', 'parallel', 'default(none)', 'num_threads(4)', 'shared(A,B,C)', '']
         
+        self.assertEqual(set(pragma.split(' ')) ,set(expected_pragma.split(' ')))
 
-        self.assertEqual(pragma,expected_pragma)
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = omp.get_parallel_pragma_insertions(
+            function_name=function_name,
+            directives=directives
+        )
 
-        # get_raw_pragma(self,directive_name,clauses)
-        # get_parallel_pragma_insertions(self,function_name,directives)
+        # The insertion has the follwing format (raw_code,line_number)
+        # the line_number is relative to the function.
+
+        # 0 void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6     for(int i=0; i<N; ++i){
+        # 7         C[i] = A[i] + B[i];
+        # 8     }    
+        # 9 }
+
+        expected_insetions = [
+            (pragma,6),
+            ('{',6),
+            ('}',9)
+        ]
+
+        self.assertEqual(insertions,expected_insetions)
 
         # ccode = omp.parallelize()
         # self.assertIsInstance(ccode,code.CCode)
