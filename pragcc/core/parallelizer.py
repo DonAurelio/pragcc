@@ -213,7 +213,7 @@ class OpenMP(BaseParallelizer):
 
         insertions = []
         if 'parallel_for' in directives:
-            loops_directives = directives['parallel_for']
+            loops_directives = directives.get('parallel_for')
             for loop_directive in loops_directives:
                 
                 loop_nro = loop_directive['nro']
@@ -222,7 +222,10 @@ class OpenMP(BaseParallelizer):
                 raw_pragma = self.get_raw_pragma('parallel for',loop_clauses)
                 loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
 
-                insertions += [(raw_pragma,loop_line_in_code)]
+                # If the loop with the given loop_nro is founded
+                # in the source code
+                if loop_line_in_code:
+                    insertions += [(raw_pragma,loop_line_in_code)]
 
         return insertions
 

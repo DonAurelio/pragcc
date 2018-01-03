@@ -111,14 +111,19 @@ class CCode(object):
     def get_loop_line(self,function_name,loop_nro,relative=True):
         condition = lambda function: function['name'] in function_name
         function = next(filter(condition,self._data['functions']),None)
-        loop_line = -1
+        loop_line = None
         if function:
             function_loops = function['for_loops']
             condition = lambda loop: loop['nro'] is loop_nro
             loop = next(filter(condition,function_loops),None)
-            absolute_line = loop['begin']['absolute']
-            relative_line = loop['begin']['relative']
-            loop_line = relative_line if relative else absolute_line
+
+            # If the loop whit the give loop_nro is founded 
+            # we return the line on which that loop begins
+            # in the source code
+            if loop:
+                absolute_line = loop['begin']['absolute']
+                relative_line = loop['begin']['relative']
+                loop_line = relative_line if relative else absolute_line
             
         return loop_line
 

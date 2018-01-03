@@ -323,6 +323,46 @@ class TestOpenMPParallelization(unittest.TestCase):
         # Creating a parallel metadata object 
         self._parallel = metadata.ParallelFile(data=data)
 
+        # Metadata needed for code parallelization
+        no_valid_data = {
+            'vesion': 1.0,
+            'name': 'stencil',
+            'description': 'Linealized matrix template with stencil parallel programming pattern. ...',
+            'functs': {
+                'all': ['main','some_function'],
+                'parallel': {
+                    'some_function': {
+                        'omp': {
+                            'parallel':{
+                                'scope':0,
+                                'clauses': {
+                                    'num_threads': 4,
+                                    'shared': ['A','B','C'],
+                                    'default': 'none'
+                                }
+                            },
+                            'parallel_for': [
+                                {
+                                    # The first loop in the code
+                                    # is the loop number 0, then the
+                                    # loop nro does not exists
+                                    'nro':1,
+                                    'clauses': {
+                                        'private': ['i'],
+                                        'reduction': '+:sum',
+                                        'colapse': 3
+                                    }
+                                }
+                            ]
+                        } 
+                    }
+                }
+            }
+        }
+
+        # Creating a parallel metadata object 
+        self._no_valid_parallel = metadata.ParallelFile(data=no_valid_data)
+
     def test_parallel_directive(self):
 
         # Getting the OpenMP directives of each function from
@@ -510,3 +550,44 @@ class TestOpenMPParallelization(unittest.TestCase):
         pragma_line = new_raw_code_lines[6]
 
         self.assertEqual(pragma_line,pragma)
+
+    def test_parallel_for_directive_with_a_non_existing_loop(self):
+
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = self._no_valid_parallel.get_directives('omp')
+
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
+
+        # Getting first function directives
+        function_name, directives = functions_directives[0]
+
+        # 2) Creating an insertion to place the pragma in the code.
+
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = self._omp.get_parallel_for_directive_inserts(
+            function_name=function_name,
+            directives=directives
+        )
+
+        # The loop nro = 1 does not exist in the example code
+        # NO insertions are generated, in this way the list of
+        # inserts must be empty.
+
+        # 'parallel_for': [
+        #     {
+        #         # The first loop in the code
+        #         # is the loop number 0, then the
+        #         # loop nro does not exists
+        #         'nro':1,
+        #         'clauses': {
+        #             'private': ['i'],
+        #             'reduction': '+:sum',
+        #             'colapse': 3
+        #         }
+        #     }
+        # ]
+
+        self.assertListEqual(insertions,[])
