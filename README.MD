@@ -136,11 +136,11 @@ int main(int argc, char const **argv)
 
 - [ ] Test what happend if some key is missing in the parallel.yml file, for example, if the parallel for directive does not have the **clauses** key.
 
-- [] Create a TestCase for each directive, checking the behavior of pragcc when some keys are mising.
+- [ ] Create a TestCase for each directive, checking the behavior of pragcc when some keys are mising.
 
-- [] Test the parallelize method properly.
+- [ ] Test the parallelize method properly.
 
-- [] Check when a give directive clauses are misspelled for example the user write 'num_theras' instead 'num_threds'.
+- [ ] Check when a give directive clauses are misspelled for example the user write 'num_theras' instead 'num_threds'.
 
 ## References
 
