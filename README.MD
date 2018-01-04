@@ -134,6 +134,12 @@ int main(int argc, char const **argv)
 
 - [ ] Add error handling.
 
+- [ ] Test what happend if some key is missing in the parallel.yml file, for example, if the parallel for directive does not have the **clauses** key.
+
+- [] Create a TestCase for each directive, checking the behavior of pragcc when some keys are mising.
+
+- [] Test the parallelize method properly.
+
 ## References
 
 [Structured Parallel Programming: Patterns for Efficient Computation](https://www.amazon.com/Structured-Parallel-Programming-Efficient-Computation/dp/0124159931)

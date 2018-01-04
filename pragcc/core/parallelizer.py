@@ -187,8 +187,8 @@ class OpenMP(BaseParallelizer):
         """
         insertions = []
         if 'parallel' in directives:
-            properties = directives.get('parallel','')
-            clauses = properties.get('clauses','')
+            properties = directives.get('parallel',{})
+            clauses = properties.get('clauses',{})
 
             raw_pragma = self.get_raw_pragma('parallel',clauses)
 
@@ -251,7 +251,7 @@ class OpenMP(BaseParallelizer):
             for loop_directive in loops_directives:
                 
                 loop_nro = loop_directive['nro']
-                loop_clauses = loop_directive['clauses']
+                loop_clauses = loop_directive.get('clauses',{})
 
                 raw_pragma = self.get_raw_pragma('parallel for',loop_clauses)
                 loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
@@ -271,7 +271,7 @@ class OpenMP(BaseParallelizer):
             for loop_directive in loops_directives:
                 
                 loop_nro = loop_directive['nro']
-                loop_clauses = loop_directive['clauses']
+                loop_clauses = loop_directive('clauses',{})
 
                 raw_pragma = self.get_raw_pragma('for',loop_clauses)
                 loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
@@ -288,11 +288,14 @@ class OpenMP(BaseParallelizer):
 
         #  Available directives
 
-        # Parallel directive insetions (THIS FEATURE DO NOT WORK PROPERLY)
+        # Parallel directive inserts
         insertions += self.get_parallel_directive_inserts(function_name,directives)
         
-        # For pragmas directives insertions
+        # For directive inserts
         insertions += self.get_for_directive_inserts(function_name,directives)
+
+        # Parallel For directive inserts
+        insertions += self.get_parallel_for_directive_inserts(function_name,directives)
 
         raw_code = self._code.get_function_raw(function_name)
         new_raw_code = self.insert_lines(raw_code,insertions)
