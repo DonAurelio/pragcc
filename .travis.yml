@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.5"
+# command to install dependencie
+install:
+  - pip3 install -r pragcc/requirements.txt
+# command to run tests
+script:
+  - python3 -m unittest tests/pragcc_code.py
+  - python3 -m unittest tests/pragcc_parser.py 
+  - python3 -m unittest tests/pragcc_metadata.py
+  - python3 -m unittest tests/pragcc_parallelizer.py 
