@@ -6,6 +6,7 @@ from pragcc.core import code
 from pragcc.core.parser.c99.pycparser.plyparser import ParseError
 from . import utils
 
+from . import utils
 import unittest
 import os
 
@@ -162,7 +163,7 @@ class TestOpenMPObjectCreation(unittest.TestCase):
 
         # Clean intermediate files created during code annotation
         utils.purge(TEST_DIR,r'^fake_*')
-        utils.purge(TEST_DIR,r'^omp_*')
+        utils.purge(TEST_DIR,r'^mp_*')
         utils.purge(TEST_DIR,r'^ccode_*')
         utils.purge(TEST_DIR,r'^acc_*')
 
@@ -295,7 +296,7 @@ class TestOpenMPParallelization(unittest.TestCase):
                 'all': ['main','some_function'],
                 'parallel': {
                     'some_function': {
-                        'omp': {
+                        'mp': {
                             'parallel':{
                                 'scope':0,
                                 'clauses': {
@@ -332,7 +333,7 @@ class TestOpenMPParallelization(unittest.TestCase):
                 'all': ['main','some_function'],
                 'parallel': {
                     'some_function': {
-                        'omp': {
+                        'mp': {
                             'parallel':{
                                 'scope':0,
                                 'clauses': {
@@ -363,11 +364,19 @@ class TestOpenMPParallelization(unittest.TestCase):
         # Creating a parallel metadata object 
         self._no_valid_parallel = metadata.Parallel(data=no_valid_data)
 
+    def tearDown(self):
+
+        # Clean intermediate files created during code annotation
+        utils.purge(TEST_DIR,r'^fake_*')
+        utils.purge(TEST_DIR,r'^mp_*')
+        utils.purge(TEST_DIR,r'^ccode_*')
+        utils.purge(TEST_DIR,r'^acc_*')
+
     def test_parallel_directive(self):
 
         # Getting the OpenMP directives of each function from
         # the metadata object. 
-        functions_directives = self._parallel.get_directives('omp')
+        functions_directives = self._parallel.get_directives('mp')
 
         # Testing the metadata object has the same data that was
         # given to it.
@@ -471,7 +480,7 @@ class TestOpenMPParallelization(unittest.TestCase):
 
         # Getting the OpenMP directives of each function from
         # the metadata object. 
-        functions_directives = self._parallel.get_directives('omp')
+        functions_directives = self._parallel.get_directives('mp')
 
         # PARALLELIZATION STEPS
 
@@ -555,7 +564,7 @@ class TestOpenMPParallelization(unittest.TestCase):
 
         # Getting the OpenMP directives of each function from
         # the metadata object. 
-        functions_directives = self._no_valid_parallel.get_directives('omp')
+        functions_directives = self._no_valid_parallel.get_directives('mp')
 
         # PARALLELIZATION STEPS
 

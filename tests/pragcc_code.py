@@ -3,6 +3,7 @@
 from pragcc.core import code
 from pragcc.core.parser.c99.pycparser.plyparser import ParseError
 
+from . import utils
 import unittest
 import os
 
@@ -19,6 +20,10 @@ class TestCCodeObject(unittest.TestCase):
         self._bool_type_1 = os.path.join(TEST_DIR,'bool_type_1.c')
         self._bool_type_2 = os.path.join(TEST_DIR,'bool_type_2.c')
         self._bool_type_3 = os.path.join(TEST_DIR,'bool_type_3.c')
+
+    def tearDown(self):
+        utils.purge(dir=TEST_DIR,pattern=r'^fake_*')
+        utils.purge(dir=TEST_DIR,pattern=r'^ccode_*')
     
     def test_read_basic_code_from_file(self):
         """
