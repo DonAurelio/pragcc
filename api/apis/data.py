@@ -4,6 +4,9 @@ RAW_C_CODE = """
 #include <stdbool.h>        /* Bool type libary */
 
 #define RowDim 20
+#define ColDim 20
+#define Generations 20
+
 struct Neighborhood
 {
     
@@ -26,14 +29,17 @@ void evolve(bool * in, bool * out)
     {
         for (int i = 0; i < (RowDim*ColDim); ++i)
         {
-            nbhd = neighborhood(in,i);
-            out[i] = function(nbhd);
+            out[i] = 1;
         }
 
         temp = in;
         in = out;
         out = temp;
     }
+}
+
+int main(){
+  return 0;
 }
 """
 

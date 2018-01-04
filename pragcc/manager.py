@@ -10,14 +10,11 @@ class OpenMPManager(object):
 
     def get_annotated_code_data(self,raw_parallel_file,raw_c_code):
 
-        parallel_meta = metadata.ParallelFile(raw_text=raw_parallel_file)
-        openmp_parallelizer = parallelizer.OpenMP(
-            metadata=parallel_meta,
-            raw_code=raw_c_code
-        )
+        parallel_meta = metadata.Parallel(raw_text=raw_parallel_file)
+        openmp_parallelizer = parallelizer.OpenMP(raw_code=raw_c_code)
 
         try:
-            ccode = openmp_parallelizer.parallelize()
+            ccode = openmp_parallelizer.parallelize(parallel_meta)
             data = {
                 'name': 'omp.c',
                 'ftype': ccode.file_type,

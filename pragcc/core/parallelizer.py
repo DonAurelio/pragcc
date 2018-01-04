@@ -301,11 +301,20 @@ class OpenMP(BaseParallelizer):
 
         return insertions
 
-    def parallelize(self, metadata):
-        self._metadata = metadata
+    def parallelize(self, meta):
+        """Return a parallelized cccode object.
+
+        Args:
+            meta (metadata.Parallel): The paralleization metadata.
+
+        Returns:
+            code.CCode, which raw code is annotated with OpenMP
+                compiler directives.
+        """
+        self._meta = meta
         openmp = metadata.Parallel.OPEN_MP
 
-        functs_directives = self._metadata.get_directives(openmp)
+        functs_directives = self._meta.get_directives(openmp)
         for funct_name, directives in functs_directives:
             self.insert_directives(funct_name,directives)
 

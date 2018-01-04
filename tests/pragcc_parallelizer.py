@@ -604,3 +604,6 @@ class TestOpenMPParallelization(unittest.TestCase):
     @unittest.skip("Needs to be implemented")
     def test_for_directive(self):
         pass
+
+    def test_parallelize_method(self):
+        ccode = self._omp.parallelize(self._parallel)
