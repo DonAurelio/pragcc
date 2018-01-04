@@ -5,34 +5,13 @@ import yaml
 import shutil
 from . import settings
 
-class ParallelFile(object):
+class Parallel(object):
 
-    OMP = 'omp'
-    OACC = 'acc'
+    OPEN_MP = 'mp'
+    OPEN_ACC = 'acc'
 
     BLOCK_DIRECTIVES = ['parallel','kernels','data']
-    LINE_DIRECTIVES = ['for','loop']
-
-    # This function looks for give and example of a paralell file format.
-    # in a given directory.
-    # @staticmethod
-    # def create_file(dir_path):
-    #     """Creates a parallel.yml file.
-    #     Creates the indicated parallel.yml file given the directory where it 
-    #     should be created.
-    #     Args:
-    #         dir_path (str): An unique location to the dir on which a 
-    #             parallel.yml will be created.
-    #     Returns:
-    #         A ParallelFile instance which contains the parallel.yml data.
-    #     """
-
-    #     file_path = os.path.join(dir_path,settings.PARALLEL_FILE_NAME)
-    #     base_file_path = os.path.join(settings.PARALLEL_FILE_DIR,
-    #         settings.PARALLEL_FILE_NAME)
-    #     shutil.copyfile(src=base_file_path,dst=file_path)
-
-    #     return ParallelFile(dir_path) if base_file_path else None
+    LINE_DIRECTIVES = ['parallel for','for','loop']
 
     @staticmethod
     def _load_from_text(text):
@@ -44,6 +23,18 @@ class ParallelFile(object):
         with open(file_path,'r') as file:
             data = yaml.load(file)
             return data
+
+    @staticmethod
+    def is_block_directive(directive_name):
+        return directive_name in ParallelFile.BLOCK_DIRECTIVES
+
+    @staticmethod
+    def get_loop_clauses(loop_metadata):
+        return loop_metadata['clauses']
+
+    @staticmethod
+    def get_loop_nro(loop_metadata):
+        return int(loop_metadata['nro'])
 
     def __init__(self,raw_text=None,file_path=None, data=None):
         """Parallel file metadata class.
@@ -70,28 +61,14 @@ class ParallelFile(object):
     def data(self):
         return self._data
 
-
-    # DIRECIVES BASED METHODS
-    @staticmethod
-    def is_block_directive(directive_name):
-        return directive_name in ParallelFile.BLOCK_DIRECTIVES
-
-    @staticmethod
-    def get_loop_clauses(loop_metadata):
-        return loop_metadata['clauses']
-
-    @staticmethod
-    def get_loop_nro(loop_metadata):
-        return int(loop_metadata['nro'])
-
-    def get_directives(self,dtype):
+    def get_directives(self,directive_type):
         # Getting the parallelizable functions metadata.
         parallel = self._data['functs']['parallel']
         
         functs_metadata = []
         for funct_name, data in parallel.items():
-            if dtype in data:
-                directives = data[dtype]
+            if directive_type in data:
+                directives = data[directive_type]
                 functs_metadata.append((funct_name,directives))
 
         return tuple(functs_metadata)

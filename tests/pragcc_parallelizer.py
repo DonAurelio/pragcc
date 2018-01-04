@@ -321,7 +321,7 @@ class TestOpenMPParallelization(unittest.TestCase):
         }
 
         # Creating a parallel metadata object 
-        self._parallel = metadata.ParallelFile(data=data)
+        self._parallel = metadata.Parallel(data=data)
 
         # Metadata needed for code parallelization
         no_valid_data = {
@@ -361,7 +361,7 @@ class TestOpenMPParallelization(unittest.TestCase):
         }
 
         # Creating a parallel metadata object 
-        self._no_valid_parallel = metadata.ParallelFile(data=no_valid_data)
+        self._no_valid_parallel = metadata.Parallel(data=no_valid_data)
 
     def test_parallel_directive(self):
 
@@ -591,3 +591,7 @@ class TestOpenMPParallelization(unittest.TestCase):
         # ]
 
         self.assertListEqual(insertions,[])
+
+    @unittest.skip("Needs to be implemented")
+    def test_for_directive(self):
+        pass

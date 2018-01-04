@@ -29,6 +29,21 @@ functs:
             shared: (list)
             copyin: (list)
             default: (shared|none)
+        # Paralell For directive list of loops to parlellize in the function
+        parallel_for:
+          # Loop, the second lexicographic loop inside the function evolve.
+          - nro: 1 
+            clauses:
+              private: [i,j]
+              firstprivate: [i,j]
+              lastprivate: [i,j]
+              reduction: '+:sum'
+              schedule: ['dynamic','1000']
+              colapse: '3'
+          # Loop, the first lexicographic loop inside the function evolve. 
+          - nro: 0
+            clauses:
+              private: [i,j]
         # For directive list of loops to parlellize in the function
         for:
           # Loop, the second lexicographic loop inside the function evolve.
