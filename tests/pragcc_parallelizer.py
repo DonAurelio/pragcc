@@ -335,26 +335,18 @@ class TestOpenMPParallelization(unittest.TestCase):
                     'some_function': {
                         'mp': {
                             'parallel':{
-                                'scope':0,
+                                # The parallel directive enclose 
+                                # the loop given by the scope key.
+                                # The first loop in the code
+                                # is the loop number 0, then the
+                                # loop nro does not exists
+                                'scope': 2,
                                 'clauses': {
                                     'num_threads': 4,
                                     'shared': ['A','B','C'],
                                     'default': 'none'
                                 }
-                            },
-                            'parallel_for': [
-                                {
-                                    # The first loop in the code
-                                    # is the loop number 0, then the
-                                    # loop nro does not exists
-                                    'nro':1,
-                                    'clauses': {
-                                        'private': ['i'],
-                                        'reduction': '+:sum',
-                                        'colapse': 3
-                                    }
-                                }
-                            ]
+                            }
                         } 
                     }
                 }
@@ -476,6 +468,47 @@ class TestOpenMPParallelization(unittest.TestCase):
         self.assertEqual(left,'{')
         self.assertEqual(right,'}')
 
+    def test_parallel_for_directive_with_an_incorrect_scope(self):
+
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = self._no_valid_parallel.get_directives('mp')
+
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
+
+        # Getting first function directives
+        function_name, directives = functions_directives[0]
+
+        # 2) Creating an insertion to place the pragma in the code.
+
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = self._omp.get_parallel_directive_inserts(
+            function_name=function_name,
+            directives=directives
+        )
+
+        # The loop nro = 1 does not exist in the example code
+        # NO insertions are generated, in this way the list of
+        # inserts must be empty.
+
+        # 'parallel_for': [
+        #     {
+        #         # The first loop in the code
+        #         # is the loop number 0, then the
+        #         # loop nro does not exists
+        #         'nro':1,
+        #         'clauses': {
+        #             'private': ['i'],
+        #             'reduction': '+:sum',
+        #             'colapse': 3
+        #         }
+        #     }
+        # ]
+
+        self.assertListEqual(insertions,[])
+
     def test_parallel_for_directive(self):
 
         # Getting the OpenMP directives of each function from
@@ -559,47 +592,6 @@ class TestOpenMPParallelization(unittest.TestCase):
         pragma_line = new_raw_code_lines[6]
 
         self.assertEqual(pragma_line,pragma)
-
-    def test_parallel_for_directive_with_a_non_existing_loop(self):
-
-        # Getting the OpenMP directives of each function from
-        # the metadata object. 
-        functions_directives = self._no_valid_parallel.get_directives('mp')
-
-        # PARALLELIZATION STEPS
-
-        # 1) Creation of the pragma
-
-        # Getting first function directives
-        function_name, directives = functions_directives[0]
-
-        # 2) Creating an insertion to place the pragma in the code.
-
-        # Generating the insertions needed to place the pragma in the source code.
-        insertions = self._omp.get_parallel_for_directive_inserts(
-            function_name=function_name,
-            directives=directives
-        )
-
-        # The loop nro = 1 does not exist in the example code
-        # NO insertions are generated, in this way the list of
-        # inserts must be empty.
-
-        # 'parallel_for': [
-        #     {
-        #         # The first loop in the code
-        #         # is the loop number 0, then the
-        #         # loop nro does not exists
-        #         'nro':1,
-        #         'clauses': {
-        #             'private': ['i'],
-        #             'reduction': '+:sum',
-        #             'colapse': 3
-        #         }
-        #     }
-        # ]
-
-        self.assertListEqual(insertions,[])
 
     @unittest.skip("Needs to be implemented")
     def test_for_directive(self):

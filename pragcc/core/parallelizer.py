@@ -198,13 +198,15 @@ class OpenMP(BaseParallelizer):
             # If in the parallel directive properties is not present 
             # the scope property no insertions are performed
             if scope is not '':
-                begin, end = self._code.get_for_loops_scope(function_name,scope)
+                directive_scope = self._code.get_for_loops_scope(function_name,scope)
+                if directive_scope:
+                    begin, end = directive_scope
 
-                insertions = [
-                    (raw_pragma,begin),
-                    ('{',begin),
-                    ('}',end + 1)
-                ]
+                    insertions = [
+                        (raw_pragma,begin),
+                        ('{',begin),
+                        ('}',end + 1)
+                    ]
 
         return insertions
 

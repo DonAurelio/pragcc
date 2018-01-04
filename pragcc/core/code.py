@@ -88,23 +88,10 @@ class CCode(object):
             first_loop = next(filter(condition,loops),None)
 
             if first_loop:
-
-                condition = lambda loop: loop['depth'] is first_loop['depth']
-                same_depth_loops = list(filter(condition,loops))
-                sorted_loops = sorted(same_depth_loops,key=lambda k: k['nro'])
-
-                if len(sorted_loops) >= 2:
-                    scope_begin = sorted_loops[0]['begin']['relative']
-                    scope_end = sorted_loops[-1]['end']['relative']
-
-                    # The scope of the loops in the function is determined 
-                    return tuple((scope_begin,scope_end))
-                
-                elif len(sorted_loops) >= 1:
-                    scope_begin = sorted_loops[0]['begin']['relative']
-                    scope_end = sorted_loops[0]['end']['relative']
-                
-                    return tuple((scope_begin,scope_end))
+                begin = first_loop['begin']['relative']
+                end = first_loop['end']['relative']
+            
+                return tuple((begin,end))
 
         return tuple()
 

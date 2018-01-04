@@ -140,6 +140,8 @@ int main(int argc, char const **argv)
 
 - [] Test the parallelize method properly.
 
+- [] Check when a give directive clauses are misspelled for example the user write 'num_theras' instead 'num_threds'.
+
 ## References
 
 [Structured Parallel Programming: Patterns for Efficient Computation](https://www.amazon.com/Structured-Parallel-Programming-Efficient-Computation/dp/0124159931)
