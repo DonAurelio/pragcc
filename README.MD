@@ -129,7 +129,9 @@ int main(int argc, char const **argv)
 ## Todo
 
 - [ ] Since the parallelization of the C99 code is not automatic, i.e, it is necessary for the user to create the **parallel.yml** file, So we can code a **code analyzer** which analyzes the source code and generates the parallel.yml metadata.
+
 - [ ] Solve **include headers** issue.
+
 - [ ] Add error handling.
 
 ## References
