@@ -41,17 +41,17 @@ class CCode(object):
         self._file_path = file_path
         self._raw_code = raw_code
 
-        if file_path:
+        if file_path and not raw_code:
             copied_file_path = CCode.copy_file(file_path,file_suffix)
             self._data = CCode.load_data_from_file(copied_file_path)
-        elif raw_code:
+        elif raw_code and not file_path:
             self._data = CCode.load_data_from_text(raw_code)
         else:
             # When this happend we need to raise and exception
             # The data dict can't be None
             raise ValueError(
                 """file_path or raw_code kwargs any of these 
-                parameters must be given."""
+                parameters must be given. but not both."""
             )
             
     @property

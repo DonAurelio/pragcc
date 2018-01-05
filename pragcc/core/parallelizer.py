@@ -86,11 +86,11 @@ class OpenMP(BaseParallelizer):
         """Allow code parallelization with OpenMP compiler directives.
 
         Args:
-
-            file_suffix (str): The suffix of the intermediate file created. 
             file_path (Optional[str]): A unique path to the file to be parallelized.
             raw_code (Optional[str]): The raw code to be parallelized. 
         """
+
+        super(OpenMP,self).__init__()
 
         #: code.CCode: An instance that contains the information about the ccode.
         self._code = code.CCode(
@@ -326,80 +326,153 @@ class OpenMP(BaseParallelizer):
         return self._code
 
 
-# class OpenACC(BaseParallelizer):
+class OpenACC(BaseParallelizer):
 
-#     _PARALLEL_METHOD = 'acc'
+    def __init__(self,file_path=None,raw_code=None):
+        """Allow code parallelization with OpenACC compiler directives.
 
-#     def __init__(self,metadata=None,file_path=None,raw_code=None):
-#         """Creates an code annotated with OpenMP Directives."""
-#         super(OpenACC,self).__init__(
-#             metadata=metadata,
-#             file_suffix='acc_',
-#             file_path=file_path,
-#             raw_code=raw_code
-#         )
+        Note: file_path or raw_code must be given, but not both.
 
-#     def get_data_pragma(self,function_name,directives):
-#         insertions = []
-#         if 'data' in directives:
-#             clauses = directives['data']
-#             raw_pragma = self.get_raw_pragma('data',clauses)
-
-#             loops_directives = directives['loop']
-
-#             if loops_directives:
-#                 first_loop = loops_directives[0]
-#                 first_loop_nro = self._metadata.get_loop_nro(first_loop)
-
-#                 begin, end = self._code.get_for_loops_scope(
-#                     function_name,first_loop_nro)
-
-#                 insertions = [
-#                     (raw_pragma,begin),
-#                     ('{',begin),
-#                     ('}',end + 1)
-#                 ]
-
-#         return insertions
-
-#     def get_loop_pragmas(self,function_name,directives):
-#         insertions = []
-#         if 'loop' in directives:
-#             loops_directives = directives['loop']
-#             for loop_directive in loops_directives:
-                
-#                 loop_nro = loop_directive['nro']
-#                 loop_clauses = loop_directive['clauses']
-
-#                 raw_pragma = self.get_raw_pragma('loop',loop_clauses)
-#                 loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
-
-#                 insertions += [(raw_pragma,loop_line_in_code)]
-
-#         return insertions
-
-#     def insert_directives(self,function_name,directives):
-#         insertions = []
-
-#         #  Available directives
-
-#         # Data directive insertions (This must by inserted first)
-#         insertions += self.get_data_pragma(function_name,directives)
+        Args:
+            file_path (Optional[str]): A unique path to the file to be parallelized.
+            raw_code (Optional[str]): The raw code to be parallelized. 
+        """
         
-#         # Loops pragmas directives insertions
-#         insertions += self.get_loop_pragmas(function_name,directives)
+        super(OpenACC,self).__init__()
 
-#         raw_code = self._code.get_function_raw(function_name)
-#         new_raw_code = self.insert_lines(raw_code,insertions)
+        #: code.CCode: An instance that contains the information about the ccode.
+        self._code = code.CCode(
+            file_suffix='mp_',
+            file_path=file_path,
+            raw_code=raw_code
+        )
 
-#         self._code.update_function_raw_code(function_name,new_raw_code)
+    def get_data_directive_inserts(self,function_name,directives):
+        """Return the inserts needed to include the data directive.
+        
+        Returns the inserts that must be made to include the data 
+        directive in the body of the function with the given function_name.
 
-#         return insertions
+        Args:
+            function_name (str): The name of te function in which the
+                parallel directive will be inserted.
+            directives (dict): Directives to be applied to the 
+                body of the function with the given function_name.
 
-#     def parallelize(self):
-#         openacc = metadata.ParallelFile.OACC
-#         functs_directives = self._metadata.get_directives(openacc)
-#         for funct_name, directives in functs_directives:
-#             self.insert_directives(funct_name,directives)
+        Example:
 
-#         return self._code
+            Each insetion to be performed in a given function
+            has the following format.
+
+            (
+                raw_code, # Code to be inserted 
+                line # Line in which the code will be inserted
+            )
+
+            If we want to place the 'data' directive on the 
+            following code. 
+
+            Given the function 'sum'
+
+            0 void sum(int * A, int * B, int * C)
+            1 {
+            2    for (int i = 0; i < 1000; ++i)
+            3    {
+            4       C[i] = A[i] + B[i];
+            5    }
+            6 }
+
+            And the following 'data directive' metadata
+            ...
+            data:
+                scope: 0
+                clauses:
+                    copy: [A,B,C]
+            ...
+
+            This function will return the follwing list of 
+            insertions.
+
+            [
+                ('#pragma acc data copy(A,B,C) ',2),
+                ('{',2),
+                ('}',6)
+            ]
+        
+        """
+
+        insertions = []
+        if 'data' in directives:
+            properties = directives.get('data',{})
+
+            scope = properties.get('scope','')
+            clauses = properties.get('clauses',{})
+            raw_pragma = self.get_raw_pragma('data',clauses)
+
+            # Determining the scope of the data pragma
+            if scope is not '':
+                directive_scope = self._code.get_for_loops_scope(function_name,scope)
+
+                if directive_scope:
+                    begin, end = directive_scope
+
+                    insertions = [
+                        (raw_pragma,begin),
+                        ('{',begin),
+                        ('}',end + 1)
+                    ]
+
+        return insertions
+
+    # def get_loop_pragmas(self,function_name,directives):
+    #     insertions = []
+    #     if 'loop' in directives:
+    #         loops_directives = directives['loop']
+    #         for loop_directive in loops_directives:
+                
+    #             loop_nro = loop_directive['nro']
+    #             loop_clauses = loop_directive['clauses']
+
+    #             raw_pragma = self.get_raw_pragma('loop',loop_clauses)
+    #             loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
+
+    #             insertions += [(raw_pragma,loop_line_in_code)]
+
+    #     return insertions
+
+    # def insert_directives(self,function_name,directives):
+    #     insertions = []
+
+    #     #  Available directives
+
+    #     # Data directive insertions (This must by inserted first)
+    #     insertions += self.get_data_pragma(function_name,directives)
+        
+    #     # Loops pragmas directives insertions
+    #     insertions += self.get_loop_pragmas(function_name,directives)
+
+    #     raw_code = self._code.get_function_raw(function_name)
+    #     new_raw_code = self.insert_lines(raw_code,insertions)
+
+    #     self._code.update_function_raw_code(function_name,new_raw_code)
+
+    #     return insertions
+
+    def parallelize(self, meta):
+        """Return a parallelized cccode object.
+
+        Args:
+            meta (metadata.Parallel): The paralleization metadata.
+
+        Returns:
+            code.CCode, which raw code is annotated with OpenMP
+                compiler directives.
+        """
+        self._meta = meta
+        openacc = metadata.Parallel.OPEN_ACC
+
+        functs_directives = self._meta.get_directives(openacc)
+        for funct_name, directives in functs_directives:
+            self.insert_directives(funct_name,directives)
+
+        return self._code
