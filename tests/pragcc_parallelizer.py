@@ -151,7 +151,28 @@ PARALLEL_METADATA = {
                         'clauses': {
                             'copy': ['A','B','C']
                         }
-                    }
+                    },
+                    'parallel_loop': [
+                        {
+                            'nro': 0,
+                            'clauses': {
+                                'num_gangs': 100,
+                                'num_workers': 100,
+                                'gang': None,
+                                'vector': None
+                            }
+                        }
+                    ],
+                    'loop': [
+                        {
+                            'nro': 0,
+                            'clauses': {
+                                'num_gangs': 100,
+                                'num_workers': 100,
+                                'vector': None
+                            }
+                        }
+                    ],
                 } 
             }
         }
@@ -870,15 +891,10 @@ class TestOpenACCDataDirective(unittest.TestCase):
             data=PARALLEL_METADATA
         )
 
-        # Creation a parallelization metadata with errors
-        self._parallel_with_errors = metadata.Parallel(
-            data=PARALLEL_METADATA_WITH_ERRORS
-        )
-
     def tearDown(self):
         # Clean intermediate files created during code annotation
         utils.purge(TEST_DIR,r'^fake_*')
-        utils.purge(TEST_DIR,r'^mp_*')
+        utils.purge(TEST_DIR,r'^acc_*')
         utils.purge(TEST_DIR,r'^ccode_*')
 
     def test_open_acc_data_directive(self):
@@ -925,7 +941,7 @@ class TestOpenACCDataDirective(unittest.TestCase):
         clauses = data_directive.get('clauses')
 
         # Constructing the OpenMP raw pragma with the directive name a clauses
-        pragma = self._acc.get_raw_pragma(directive_name='parallel',clauses=clauses)
+        pragma = self._acc.get_raw_pragma(directive_name='data',clauses=clauses)
         expected_pragma = '#pragma acc data copy(A,B,C) '
 
         # The generated string conserve the order of '#pragma omp parallel' string
@@ -941,7 +957,7 @@ class TestOpenACCDataDirective(unittest.TestCase):
         # 2) Creating an insertion to place the pragma in the code.
 
         # Generating the insertions needed to place the pragma in the source code.
-        insertions = self._acc.get_parallel_directive_inserts(
+        insertions = self._acc.get_data_directive_inserts(
             function_name=function_name,
             directives=directives
         )
@@ -995,3 +1011,231 @@ class TestOpenACCDataDirective(unittest.TestCase):
         self.assertEqual(pragma_line,pragma)
         self.assertEqual(left,'{')
         self.assertEqual(right,'}')
+
+class TestOpenACCParallelLoopDirective(unittest.TestCase):
+
+    def setUp(self):
+        # Creating the OpenMP parallelizer
+        self._acc = parallelizer.OpenACC(
+            raw_code=SIMPLE_CODE_FUNCTION_LOOP
+        )
+
+        # Creation paralellization metadata object
+        self._parallel = metadata.Parallel(
+            data=PARALLEL_METADATA
+        )
+
+    def tearDown(self):
+        # Clean intermediate files created during code annotation
+        utils.purge(TEST_DIR,r'^fake_*')
+        utils.purge(TEST_DIR,r'^acc_*')
+        utils.purge(TEST_DIR,r'^ccode_*')
+
+
+    def test_parallel_loop_directive(self):
+
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = self._parallel.get_directives('acc')
+
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
+
+        # Getting first function directives
+        function_name, directives = functions_directives[0]
+
+        # Getting a directive from the metadata
+        parallel_loops = directives.get('parallel_loop')
+        # Getting the clauses of that directive
+        first_loop = parallel_loops[0]
+        clauses = first_loop.get('clauses')
+
+        # Constructing the OpenMP raw pragma with the directive name a clauses
+        pragma = self._acc.get_raw_pragma(directive_name='parallel loop',clauses=clauses)
+        expected_pragma = '#pragma acc parallel loop num_gangs(100) num_workers(100) gang vector '
+
+        # The generated string conserve the order of '#pragma omp parallel' string
+        # but clauses can change order, thus both string pragmas are equivalent if
+        # they has the same words. Which is equivalent to saying f the two sets have
+        # exactly the same elements
+
+        # ['#pragma','acc','parallel','loop','num_gangs(100)','num_workers(100)','gang','vector','']
+        # ['#pragma','acc','parallel','loop','num_workers(100)','num_gangs(100)','gang','vector','']
+        
+        self.assertEqual(set(pragma.split(' ')) ,set(expected_pragma.split(' ')))
+
+        # 2) Creating an insertion to place the pragma in the code.
+
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = self._acc.get_parallel_loop_directive_inserts(
+            function_name=function_name,
+            directives=directives
+        )
+
+        # The insertion has the follwing format (raw_code,line_number)
+        # the line_number is relative to the function.
+
+        # 0 void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6     for(int i=0; i<N; ++i){
+        # 7         C[i] = A[i] + B[i];
+        # 8     }    
+        # 9 }
+
+        expected_insetions = [
+            (pragma,6)
+        ]
+
+        self.assertEqual(insertions,expected_insetions)
+
+        # 3) Code insertion
+
+        raw_code = self._acc.code.get_function_raw(function_name)
+        new_raw_code = self._acc.insert_lines(raw_code,insertions)
+
+        # 0  void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6 #pragma acc parallel loop num_gangs(100) num_workers(100) gang vector 
+        # 7    for(int i=0; i<N; ++i){
+        # 8         C[i] = A[i] + B[i];
+        # 9    }    
+        # 10
+        # 11 }
+
+        new_raw_code_lines = new_raw_code.splitlines()
+        pragma_line = new_raw_code_lines[6]
+
+        self.assertEqual(pragma_line,pragma)
+
+
+class TestOpenACCLoopDirective(unittest.TestCase):
+
+    def setUp(self):
+        # Creating the OpenMP parallelizer
+        self._acc = parallelizer.OpenACC(
+            raw_code=SIMPLE_CODE_FUNCTION_LOOP
+        )
+
+        # Creation paralellization metadata object
+        self._parallel = metadata.Parallel(
+            data=PARALLEL_METADATA
+        )
+
+    def tearDown(self):
+        # Clean intermediate files created during code annotation
+        utils.purge(TEST_DIR,r'^fake_*')
+        utils.purge(TEST_DIR,r'^acc_*')
+        utils.purge(TEST_DIR,r'^ccode_*')
+
+
+    def test_loop_directive(self):
+
+        # Getting the OpenMP directives of each function from
+        # the metadata object. 
+        functions_directives = self._parallel.get_directives('acc')
+
+        # PARALLELIZATION STEPS
+
+        # 1) Creation of the pragma
+
+        # Getting first function directives
+        function_name, directives = functions_directives[0]
+
+        # Getting a directive from the metadata
+        loops = directives.get('loop')
+        # Getting the clauses of that directive
+        first_loop = loops[0]
+        clauses = first_loop.get('clauses')
+
+        # Constructing the OpenMP raw pragma with the directive name a clauses
+        pragma = self._acc.get_raw_pragma(directive_name='loop',clauses=clauses)
+        expected_pragma = '#pragma acc loop num_gangs(100) num_workers(100) vector '
+
+        # The generated string conserve the order of '#pragma omp parallel' string
+        # but clauses can change order, thus both string pragmas are equivalent if
+        # they has the same words. Which is equivalent to saying f the two sets have
+        # exactly the same elements
+
+        # ['#pragma','acc','parallel','loop','num_gangs(100)','num_workers(100)','gang','vector','']
+        # ['#pragma','acc','parallel','loop','num_workers(100)','num_gangs(100)','gang','vector','']
+        
+        self.assertEqual(set(pragma.split(' ')) ,set(expected_pragma.split(' ')))
+
+        # 2) Creating an insertion to place the pragma in the code.
+
+        # Generating the insertions needed to place the pragma in the source code.
+        insertions = self._acc.get_loop_directive_inserts(
+            function_name=function_name,
+            directives=directives
+        )
+
+        # The insertion has the follwing format (raw_code,line_number)
+        # the line_number is relative to the function.
+
+        # 0 void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6     for(int i=0; i<N; ++i){
+        # 7         C[i] = A[i] + B[i];
+        # 8     }    
+        # 9 }
+
+        expected_insetions = [
+            (pragma,6)
+        ]
+
+        self.assertEqual(insertions,expected_insetions)
+
+        # 3) Code insertion
+
+        raw_code = self._acc.code.get_function_raw(function_name)
+        new_raw_code = self._acc.insert_lines(raw_code,insertions)
+
+        # 0  void some_function(){
+        # 1
+        # 2     int A[N];
+        # 3     int B[N];
+        # 4     int C[N];
+        # 5
+        # 6 #pragma acc loop num_gangs(100) num_workers(100) vector 
+        # 7    for(int i=0; i<N; ++i){
+        # 8         C[i] = A[i] + B[i];
+        # 9    }    
+        # 10
+        # 11 }
+
+        new_raw_code_lines = new_raw_code.splitlines()
+        pragma_line = new_raw_code_lines[6]
+
+        self.assertEqual(pragma_line,pragma)
+
+class TestOpenACCWholeParallelization(unittest.TestCase):
+
+    def setUp(self):
+        # Creating the OpenACC parallelizer
+        self._acc = parallelizer.OpenACC(
+            raw_code=SIMPLE_CODE_FUNCTION_LOOP
+        )
+
+        # Creation paralellization metadata object
+        self._parallel = metadata.Parallel(
+            data=PARALLEL_METADATA
+        )
+
+    def test_parallelize_method(self):
+        # NOTE: we need to check the paralwllization was
+        # driven correctly.
+        ccode = self._acc.parallelize(self._parallel)
+

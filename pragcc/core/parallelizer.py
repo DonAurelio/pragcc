@@ -119,12 +119,15 @@ class OpenMP(BaseParallelizer):
         for clause_name, value in clauses.items():
             raw_clauses += clause_name
 
+            # Clause witha list of arguments string
             if type(value) is list:
                 raw_clauses += '(' + ','.join(value) + ') '
 
+            # Clause with a single argument int
             elif type(value) is int:
                 raw_clauses += '(' + str(value) + ') '
 
+            # Clause with a single argument string
             else:
                 raw_clauses += '(' + value + ') '
 
@@ -347,6 +350,46 @@ class OpenACC(BaseParallelizer):
             raw_code=raw_code
         )
 
+    @property
+    def code(self):
+        return self._code
+
+    def get_raw_pragma(self,directive_name,clauses):
+        """Return a raw pragma with its clauses.
+
+        Args:
+            directive_name (str): An OpenACC directive.
+            clauses (dict): OpenACC clauses name an its arguments.
+
+        Returns: 
+            str, with an raw OpenACC pragma.
+        """
+        raw_pragma = '#pragma acc %s %s'
+        raw_clauses = ''
+
+        for clause_name, value in clauses.items():
+            raw_clauses += clause_name
+
+            # Clause with no arguments
+            if value is None:
+                raw_clauses += ' '
+
+            # Clause witha list of arguments string
+            elif type(value) is list:
+                raw_clauses += '(' + ','.join(value) + ') '
+
+            # Clause with a single argument int
+            elif type(value) is int:
+                raw_clauses += '(' + str(value) + ') '
+
+            # Clause with a single argument string
+            else:
+                raw_clauses += '(' + value + ') '
+
+            # raw_clauses = raw_clauses.replace("'","")
+
+        return raw_pragma % (directive_name,raw_clauses)
+
     def get_data_directive_inserts(self,function_name,directives):
         """Return the inserts needed to include the data directive.
         
@@ -424,39 +467,139 @@ class OpenACC(BaseParallelizer):
 
         return insertions
 
-    # def get_loop_pragmas(self,function_name,directives):
-    #     insertions = []
-    #     if 'loop' in directives:
-    #         loops_directives = directives['loop']
-    #         for loop_directive in loops_directives:
+    def get_parallel_loop_directive_inserts(self,function_name,directives):
+        """Return the parallel loop directive raw code.
+
+        Returns the inserts that must be made to include the parallel for
+        directive in the body of the function with the given function_name.
+
+        Given the function 'sum'
+
+        0 void sum(int * A, int * B, int * C)
+        1 {
+        2    for (int i = 0; i < 1000; ++i) // loop_nro = 0 
+        3    {
+        4       C[i] = A[i] + B[i];
+        5    }
+        6 }
+
+        ...
+        parallel_loop:
+            - nro: 0                # loop_nro = 0
+              clauses:
+                vector_length: 100
+                num_gangs: 100
+                gang:
+            - nro: 1                # This loop does not exist.
+              clauses:
+                private:[j]
+        ...
+
+        The algoritm generate a set of insertions for each item in
+        the parallel_for list. If there is an item who nro is not in 
+        the source code data, that item does not generate insertions.
+        Then only one insertion generated on this case is.
+
+        [
+            ('#pragma acc parallel loop num_gangs(100) vector_lenght(100) gang ',2),
+        ]
+        """
+
+        insertions = []
+        if 'parallel_loop' in directives:
+            loops_directives = directives.get('parallel_loop')
+            for loop_directive in loops_directives:
                 
-    #             loop_nro = loop_directive['nro']
-    #             loop_clauses = loop_directive['clauses']
+                loop_nro = loop_directive['nro']
+                loop_clauses = loop_directive.get('clauses',{})
 
-    #             raw_pragma = self.get_raw_pragma('loop',loop_clauses)
-    #             loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
+                raw_pragma = self.get_raw_pragma('parallel loop',loop_clauses)
+                loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
 
-    #             insertions += [(raw_pragma,loop_line_in_code)]
+                # If the loop with the given loop_nro is founded
+                # in the source code
+                if loop_line_in_code:
+                    insertions += [(raw_pragma,loop_line_in_code)]
 
-    #     return insertions
+        return insertions
 
-    # def insert_directives(self,function_name,directives):
-    #     insertions = []
+    def get_loop_directive_inserts(self,function_name,directives):
+        """Return the parallel loop directive raw code.
 
-    #     #  Available directives
+        Returns the inserts that must be made to include the parallel for
+        directive in the body of the function with the given function_name.
 
-    #     # Data directive insertions (This must by inserted first)
-    #     insertions += self.get_data_pragma(function_name,directives)
+        Given the function 'sum'
+
+        0 void sum(int * A, int * B, int * C)
+        1 {
+        2    for (int i = 0; i < 1000; ++i) // loop_nro = 0 
+        3    {
+        4       C[i] = A[i] + B[i];
+        5    }
+        6 }
+
+        ...
+        loop:
+            - nro: 0                # loop_nro = 0
+              clauses:
+                vector_length: 100
+                num_gangs: 100
+                vector:
+            - nro: 1                # This loop does not exist.
+              clauses:
+                private:[j]
+        ...
+
+        The algoritm generate a set of insertions for each item in
+        the parallel_for list. If there is an item who nro is not in 
+        the source code data, that item does not generate insertions.
+        Then only one insertion generated on this case is.
+
+        [
+            ('#pragma acc loop num_gangs(100) vector_lenght(100) vector ',2),
+        ]
+        """
+
+        insertions = []
+        if 'loop' in directives:
+            loops_directives = directives.get('loop')
+            for loop_directive in loops_directives:
+                
+                loop_nro = loop_directive['nro']
+                loop_clauses = loop_directive.get('clauses',{})
+
+                raw_pragma = self.get_raw_pragma('loop',loop_clauses)
+                loop_line_in_code = self._code.get_loop_line(function_name,loop_nro)
+
+                # If the loop with the given loop_nro is founded
+                # in the source code
+                if loop_line_in_code:
+                    insertions += [(raw_pragma,loop_line_in_code)]
+
+        return insertions
+
+
+    def insert_directives(self,function_name,directives):
+        insertions = []
+
+        #  Available directives
+
+        # Data directive inserts
+        insertions += self.get_data_directive_inserts(function_name,directives)
         
-    #     # Loops pragmas directives insertions
-    #     insertions += self.get_loop_pragmas(function_name,directives)
+        # Parallel loop directive inserts
+        insertions += self.get_parallel_loop_directive_inserts(function_name,directives)
 
-    #     raw_code = self._code.get_function_raw(function_name)
-    #     new_raw_code = self.insert_lines(raw_code,insertions)
+        # Loop directive inserts
+        insertions += self.get_loop_directive_inserts(function_name,directives)
 
-    #     self._code.update_function_raw_code(function_name,new_raw_code)
+        raw_code = self._code.get_function_raw(function_name)
+        new_raw_code = self.insert_lines(raw_code,insertions)
 
-    #     return insertions
+        self._code.update_function_raw_code(function_name,new_raw_code)
+
+        return insertions
 
     def parallelize(self, meta):
         """Return a parallelized cccode object.
