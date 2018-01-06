@@ -10,7 +10,6 @@ the original one.
 """
 
 import os
-import pprint
 from . import ast_visitor
 from . import pycparser
 

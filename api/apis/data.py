@@ -44,34 +44,28 @@ int main(){
 """
 
 PARALLEL_FILE = """
-# Note
-# The suggested syntax for YAML files is to use 2 spaces for indentation, but YAML will follow whatever indentation system that the individual file uses.
-name: 'Name to this parallel file'
+version: '1.0'
+name: 'example'
 description: |
-  This is a template of a parallel file. 
+  Example of a parallel file. 
 functs:
-  all: # List the functions available in the source code
+  all:
     - main
     - initialize
     - function
     - neighborhood
     - evolve
-  # Defines just the functions that are paralleizable and how to parallelize them.
   parallel:
-    # Function
     evolve:
-      # OpenMP direcives
-      omp:
-        # Parallel directive, apply or enclose the loops defined in the for directive
+      mp:
         parallel:
-          # Parallel directive clauses
-          num_threads: int
-          shared: (A,B)
-          copyin: (C)
-        # For directive list of loops to parlellize in the function
-        for:
-          # Loop, the second lexicographic loop inside the function evolve.
-          - nro: 1 
+          scope: 0
+          clauses:
+            num_threads: int
+            shared: [A,B]
+            copyin: [C]
+        parallel_for:
+          - nro: 0
             clauses:
               private: [i,j]
               firstprivate: [i,j]
@@ -79,73 +73,22 @@ functs:
               reduction: '+:sum'
               schedule: ['dynamic','1000']
               colapse: '3'
-          # Loop, the first lexicographic loop inside the function evolve. 
-          - nro: 0
-            clauses:
-              private: [i,j]
       acc:
-        # #pragma acc parallel [clause [[,] clause]...] new-line 
-        # { structured block }
-        parallel: # Parallel and kernels regios can live together
-          num_gangs: (expression) # how many parallel gangs are created
-          num_workers: (expression) # how many workers are created on each gang
-          vector_length: (expression) # Controls the vector length of each worker
-          private: (list)
-          firstprivate: (list)
-          reduction: (operator:list)
-          # Clauses unique to openacc parallel region.
-          gang: '100' # (Optional) num_gangs
-          worker: '100' # (Optional) num_workers
-          vector: '100' # (Optional) vector_length
-        # #pragma acc kernels [clause [[,] clause]...] new-line 
-        # { structured block }
-        kernels: # Parallel and kernels regios can live together
-        # any data clause is allowed
+        parallel:
+          scope: 0
+          clauses:
+            num_gangs: 1000
+            num_workers: 1000
+            vector_length: 1000
+            private: [i]
+            firstprivate: [j]
+            reduction: '+:sum'
+            gang: '100' # (Optional) num_gangs
+            worker: '100' # (Optional) num_workers
+            vector: '100' # (Optional) vector_length
         data:
-          create: [A,B,C] # Data variables must contain the range of information to bring to the GPU A[0:100]
+          create: [A,B,C]
           copy: [A,B,C]
           copyin: [A,B,C]
           copyout: [A,B,C]
-        loop:
-         - nro: 0
-           # parallel: true
-           clauses:
-             colapse: '3'
-             private: [i,j,k]
-             reduction: '+:sum'
-             # indepedent: True
-"""
-
-# The following parallel.yml file does not work because it not follows the 
-# correct parallel file format
-NON_WORKING_PARALLEL_FILE = """
-name: 'stencil'
-description: |
-    Linealized matrix template with stencil parallel programming pattern.
-    support OpenMP loop coarse grain parallelization and OpenACC fine
-    grain parallelization. 
-functs:
-    all: # Defines the functions available in the template
-        - main
-        - initialize
-        - function
-        - neighborhood
-        - evolve
-    editable: # Defines just the functions that can be modified by the user
-        - initialize
-        - function
-    parallel: # Defines just the functions that are paralleizable and hoy to parallelize them
-        evolve:
-            openmp:
-                - loop_nro: 0
-                  private:
-                    - i
-                    - j  
-                - loop_nro: 1
-                  shared: # First loop from the code
-                    - in
-                    - out
-                  default: none 
-        otherfunction:
-            openacc:[]
 """

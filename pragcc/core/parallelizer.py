@@ -139,41 +139,31 @@ class OpenMP(BaseParallelizer):
             raw_code=raw_code
         )
 
+        #: DirectiveFactory: To create OpenMP raw pragmas.
+        self._directive_factory = DirectiveFactory()
+
     @property
     def code(self):
         return self._code
 
     def get_raw_pragma(self,directive_name,clauses):
-        """Return a raw pragma with its clausules.
+        """Return an OpenMP raw pragma.
 
         Args:
             directive_name (str): An OpenMP directive.
             clauses (dict): OpenMP clauses name an its arguments.
 
         Returns: 
-            A raw OpenMP directive.
+            A raw OpenMP pragma.
         """
-        raw_pragma = '#pragma omp %s %s'
-        raw_clauses = ''
 
-        for clause_name, value in clauses.items():
-            raw_clauses += clause_name
+        raw_pragma = self._directive_factory.create_raw_pragma(
+            library_name='omp',
+            directive_name=directive_name,
+            clauses=clauses
+        )
 
-            # Clause witha list of arguments string
-            if type(value) is list:
-                raw_clauses += '(' + ','.join(value) + ') '
-
-            # Clause with a single argument int
-            elif type(value) is int:
-                raw_clauses += '(' + str(value) + ') '
-
-            # Clause with a single argument string
-            else:
-                raw_clauses += '(' + value + ') '
-
-            # raw_clauses = raw_clauses.replace("'","")
-
-        return raw_pragma % (directive_name,raw_clauses)
+        return raw_pragma
 
     def get_parallel_directive_inserts(self,function_name,directives):
         """Return the inserts needed to include the parallel directive.
@@ -390,45 +380,31 @@ class OpenACC(BaseParallelizer):
             raw_code=raw_code
         )
 
+        #: DirectiveFactory: To create OpenMP raw pragmas.
+        self._directive_factory = DirectiveFactory()
+
     @property
     def code(self):
         return self._code
 
     def get_raw_pragma(self,directive_name,clauses):
-        """Return a raw pragma with its clauses.
+        """Return an OpenACC raw pragma.
 
         Args:
-            directive_name (str): An OpenACC directive.
-            clauses (dict): OpenACC clauses name an its arguments.
+            directive_name (str): An OpenMP directive.
+            clauses (dict): OpenMP clauses name an its arguments.
 
         Returns: 
-            str, with an raw OpenACC pragma.
+            A raw OpenMP pragma.
         """
-        raw_pragma = '#pragma acc %s %s'
-        raw_clauses = ''
 
-        for clause_name, value in clauses.items():
-            raw_clauses += clause_name
+        raw_pragma = self._directive_factory.create_raw_pragma(
+            library_name='acc',
+            directive_name=directive_name,
+            clauses=clauses
+        )
 
-            # Clause with no arguments
-            if value is None:
-                raw_clauses += ' '
-
-            # Clause witha list of arguments string
-            elif type(value) is list:
-                raw_clauses += '(' + ','.join(value) + ') '
-
-            # Clause with a single argument int
-            elif type(value) is int:
-                raw_clauses += '(' + str(value) + ') '
-
-            # Clause with a single argument string
-            else:
-                raw_clauses += '(' + value + ') '
-
-            # raw_clauses = raw_clauses.replace("'","")
-
-        return raw_pragma % (directive_name,raw_clauses)
+        return raw_pragma
 
     def get_data_directive_inserts(self,function_name,directives):
         """Return the inserts needed to include the data directive.
