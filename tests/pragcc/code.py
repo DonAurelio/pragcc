@@ -3,27 +3,24 @@
 from pragcc.core import code
 from pragcc.core.parser.c99.pycparser.plyparser import ParseError
 
-from . import utils
+from tests import utils
+from tests.pragcc import test_data
+
 import unittest
-import os
-
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DIR = os.path.join(BASE_DIR,'files')
-
 
 class TestCCodeObject(unittest.TestCase):
 
     def setUp(self):
-        self._basic = os.path.join(TEST_DIR,'basic.c')
-        self._complex = os.path.join(TEST_DIR,'complex.c')
-        self._empty = os.path.join(TEST_DIR,'empty.c')
-        self._bool_type_1 = os.path.join(TEST_DIR,'bool_type_1.c')
-        self._bool_type_2 = os.path.join(TEST_DIR,'bool_type_2.c')
-        self._bool_type_3 = os.path.join(TEST_DIR,'bool_type_3.c')
+        self._basic = test_data.BASIC_FILE_PATH
+        self._complex = test_data.COMPLEX_FILE_PATH
+        self._empty = test_data.EMPTY_FILE_PATH
+        self._unsupported_1 = test_data.UNSUPPORTED_CODE_FILE_PATH_1
+        self._unsupported_2 = test_data.UNSUPPORTED_CODE_FILE_PATH_2
+        self._supported = test_data.SUPPORTED_CODE_FILE_PATH
 
     def tearDown(self):
-        utils.purge(dir=TEST_DIR,pattern=r'^fake_*')
-        utils.purge(dir=TEST_DIR,pattern=r'^ccode_*')
+        utils.purge(dir=test_data.TEST_DIR,pattern=r'^fake_*')
+        utils.purge(dir=test_data.TEST_DIR,pattern=r'^ccode_*')
     
     def test_read_basic_code_from_file(self):
         """
@@ -81,14 +78,14 @@ class TestCCodeObject(unittest.TestCase):
         with self.assertRaises(IndexError):
             ccode = code.CCode(file_path=self._empty)
 
-    def test_read_unssupported_type_file(self):
+    def test_read_unssupported_code_file_1(self):
         with self.assertRaises(ParseError):
-            ccode = code.CCode(file_path=self._bool_type_1)
+            ccode = code.CCode(file_path=self._unsupported_1)
 
-    def test_read_include_bool_type_file(self):
+    def test_read_unssupported_code_file_2(self):
         with self.assertRaises(ParseError):
-            ccode = code.CCode(file_path=self._bool_type_2)
+            ccode = code.CCode(file_path=self._unsupported_2)
 
-    def test_read_include_bool_type_behid_two_includes_file(self):
-        ccode = code.CCode(file_path=self._bool_type_3)
+    def test_read_supported_code_file(self):
+        ccode = code.CCode(file_path=self._supported)
         self.assertIsInstance(ccode,code.CCode)

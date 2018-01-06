@@ -2,17 +2,15 @@
 
 from pragcc.core import metadata
 
-import unittest
-import os
+from tests.pragcc import test_data
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DIR = os.path.join(BASE_DIR,'files')
+import unittest
 
 
 class TestParallelFile(unittest.TestCase):
 
 	def setUp(self):
-		self._file_path_1 = os.path.join(TEST_DIR,'parallel.yml')
+		self._file_path_1 = test_data.PARALLEL_FILE_PATH
 	
 	def test_parallel_metadata_object_creation(self):
 		parallel_metadata = metadata.Parallel(file_path=self._file_path_1)

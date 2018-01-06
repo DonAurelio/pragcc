@@ -3,6 +3,46 @@
 from . import code
 from . import metadata
 
+class DirectiveFactory(object):
+    """Deals with OpenMP and OpenACC raw pragmas creation."""
+
+    def create_raw_pragma(self,library_name,directive_name,clauses):
+        """Return a raw pragma with its clausules.
+
+        Args:
+            libary_name (str): omp or acc.
+            directive_name (str): the name of the directive 
+                to be created.
+            clauses (dict): clauses applied to that directive 
+                an its arguments.
+
+        Returns: 
+            A raw pragma.
+        """
+        raw_pragma = '#pragma %s %s %s'
+        raw_clauses = ''
+
+        for clause_name, value in clauses.items():
+            raw_clauses += clause_name
+
+            # Clause with no arguments
+            if value is None:
+                raw_clauses += ' '
+
+            # Clause witha list of arguments string
+            elif type(value) is list:
+                raw_clauses += '(' + ','.join(value) + ') '
+
+            # Clause with a single argument int
+            elif type(value) is int:
+                raw_clauses += '(' + str(value) + ') '
+
+            # Clause with a single argument string
+            else:
+                raw_clauses += '(' + value + ') '
+
+        return raw_pragma % (library_name,directive_name,raw_clauses)
+
 
 class BaseParallelizer(object):
     """Define a set of functions required on each paralelization method."""

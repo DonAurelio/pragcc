@@ -6,7 +6,10 @@ install:
   - pip3 install -r pragcc/requirements.txt
 # command to run tests
 script:
-  - python3 -m unittest tests/pragcc_code.py
-  - python3 -m unittest tests/pragcc_parser.py 
-  - python3 -m unittest tests/pragcc_metadata.py
-  - python3 -m unittest tests/pragcc_parallelizer.py 
+  - python3 -m unittest tests/pragcc/code.py
+  - python3 -m unittest tests/pragcc/parser.py 
+  - python3 -m unittest tests/pragcc/metadata.py
+  - python3 -m unittest tests/pragcc/parallelizer_base.py
+  - python3 -m unittest tests/pragcc/parallelizer_directive_factory.py 
+  - python3 -m unittest tests/pragcc/parallelizer_open_mp.py 
+  - python3 -m unittest tests/pragcc/parallelizer_open_acc.py 
