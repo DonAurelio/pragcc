@@ -17,3 +17,5 @@ RUN pip install --no-cache-dir -r ./api/requirements.txt
 # the container, use the -p flag on docker run to publish and map one or more ports, or the -P 
 # flag to publish all exposed ports and map them to to high-order ports.
 EXPOSE 5000
+
+CMD ["/bin/sh", "entrypoint.sh"]
