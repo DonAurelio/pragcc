@@ -1,13 +1,14 @@
 # Base image
-FROM python:alpine
+FROM python:3.8.0-alpine
 # Image propietary
 LABEL maintainer="Aurelio Vivas aurelio.vivas@correounivalle.edu.co"
 # Working directory inside the container
 WORKDIR /usr/src/app
+# Installing packages
+RUN apk add --no-cache gcc musl-dev
 # Copy the project into the container current workdir
 COPY . .
 # Installing requirements
-RUN apk add --no-cache gcc musl-dev
 RUN pip install --no-cache-dir -r ./api/requirements.txt
 
 # Informs Docker that the container listens on the specified network ports at runtime

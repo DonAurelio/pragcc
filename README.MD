@@ -100,7 +100,7 @@ Perform the following commands to build the **pragcc** image, then to run the **
 
 ```sh
 docker build -t pragcc .
-docker run -d -v ${PWD}:/usr/src/app --name pragcc -p 5001:5001 pragcc
+docker run -d -v ${PWD}:/usr/src/app --name pragcc -p 5000:5000 pragcc
 ```
 
 ## Known Issues

@@ -230,7 +230,7 @@ class OpenMP(BaseParallelizer):
 
             # If in the parallel directive properties is not present 
             # the scope property no insertions are performed
-            if scope is not '':
+            if scope != '':
                 directive_scope = self._code.get_for_loops_scope(function_name,scope)
                 if directive_scope:
                     begin, end = directive_scope
@@ -469,7 +469,7 @@ class OpenACC(BaseParallelizer):
             raw_pragma = self.get_raw_pragma('data',clauses)
 
             # Determining the scope of the data pragma
-            if scope is not '':
+            if scope != '':
                 directive_scope = self._code.get_for_loops_scope(function_name,scope)
 
                 if directive_scope:
